@@ -7,7 +7,6 @@ import {
   MutableDataFrame,
 } from '@grafana/data';
 
-import { MyQuery, MyDataSourceOptions } from './types';
 import { defaultQuery, MyDataSourceOptions, MyQuery } from './types';
 import defaults from 'lodash/defaults';
 
