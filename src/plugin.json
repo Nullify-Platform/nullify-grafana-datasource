@@ -1,11 +1,11 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Grafana",
+  "name": "Nullify Grafana Datasource",
   "id": "nullify-grafana-datasource",
   "metrics": true,
   "info": {
-    "description": "Nullify dashboard for grafana",
+    "description": "Grafana datasource for the Nullify API",
     "author": {
       "name": "Nullify"
     },
@@ -20,7 +20,7 @@
     "updated": "%TODAY%"
   },
   "dependencies": {
-    "grafanaDependency": ">=10.0.3",
+    "grafanaDependency": ">=10.3.1",
     "plugins": []
   }
 }

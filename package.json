@@ -1,7 +1,7 @@
 {
-  "name": "grafana",
+  "name": "nullify-grafana-datasource",
   "version": "1.0.0",
-  "description": "Nullify dashboard for grafana",
+  "description": "Grafana datasource for the Nullify API",
   "scripts": {
     "build": "webpack -c ./.config/webpack/webpack.config.ts --env production",
     "dev": "webpack -w -c ./.config/webpack/webpack.config.ts --env development",
@@ -17,6 +17,10 @@
   },
   "author": "Nullify",
   "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/nullify-platform/nullify-grafana-datasource/issues",
+    "email": "support@nullify.ai"
+  },
   "devDependencies": {
     "@babel/core": "^7.21.4",
     "@grafana/e2e": "10.0.3",
@@ -60,10 +64,10 @@
   },
   "dependencies": {
     "@emotion/css": "11.10.6",
-    "@grafana/data": "10.0.3",
-    "@grafana/runtime": "10.0.3",
-    "@grafana/ui": "10.0.3",
-    "@grafana/schema": "10.0.3",
+    "@grafana/data": "10.3.1",
+    "@grafana/runtime": "10.3.1",
+    "@grafana/ui": "10.3.1",
+    "@grafana/schema": "10.3.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tslib": "2.5.3"
