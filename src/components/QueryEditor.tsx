@@ -1,12 +1,10 @@
 import defaults from 'lodash/defaults';
 
 import React, { ChangeEvent, PureComponent } from 'react';
-import { LegacyForms, HorizontalGroup } from '@grafana/ui';
+import { HorizontalGroup } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { NullifySastDataSource } from '../datasource';
 import { defaultQuery, NullifyDataSourceOptions, MyQuery } from '../types';
-
-const { FormField } = LegacyForms;
 
 type Props = QueryEditorProps<NullifySastDataSource, MyQuery, NullifyDataSourceOptions>;
 
@@ -22,13 +20,7 @@ export class QueryEditor extends PureComponent<Props> {
 
     return (
       <HorizontalGroup>
-        <FormField
-          labelWidth={8}
-          value={queryText || ''}
-          onChange={this.onQueryTextChange}
-          label="Unused Query Text"
-          tooltip="Not used yet"
-        />
+        Queries are not currently supported.
       </HorizontalGroup>
     );
   }
