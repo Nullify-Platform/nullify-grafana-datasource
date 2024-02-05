@@ -1,27 +1,51 @@
-import defaults from 'lodash/defaults';
+import React, { ChangeEvent, useState } from 'react';
+import { Button, Field, InlineField, Input, Select } from '@grafana/ui';
+import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import { NullifySastSummaryDataSource } from '../datasource';
+import { NullifyDataSourceOptions, NullifySastSummaryQueryOptions } from '../types';
 
-import React, { ChangeEvent, PureComponent } from 'react';
-import { HorizontalGroup } from '@grafana/ui';
-import { QueryEditorProps } from '@grafana/data';
-import { NullifySastDataSource } from '../datasource';
-import { defaultQuery, NullifyDataSourceOptions, MyQuery } from '../types';
+type Props = QueryEditorProps<NullifySastSummaryDataSource, NullifySastSummaryQueryOptions, NullifyDataSourceOptions>;
 
-type Props = QueryEditorProps<NullifySastDataSource, MyQuery, NullifyDataSourceOptions>;
-
-export class QueryEditor extends PureComponent<Props> {
-  onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { onChange, query } = this.props;
-    onChange({ ...query, queryText: event.target.value });
+export function QueryEditor({ query, onChange, onRunQuery }: Props) {
+  const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange({ ...query, githubRepositoryId: event.target.value });
+  };
+  const onSeverityChange = (new_severity: string) => {
+    onChange({ ...query, severity: new_severity });
+    onRunQuery();
   };
 
-  render() {
-    const query = defaults(this.props.query, defaultQuery);
-    const { queryText } = query;
+  const severity_options: Array<SelectableValue<string>> = [
+    { value: '', label: 'ALL' },
+    { value: 'LOW', label: 'LOW' },
+    { value: 'MEDIUM', label: 'MEDIUM' },
+    { value: 'HIGH', label: 'HIGH' },
+    { value: 'CRITICAL', label: 'CRITICAL' },
+  ];
 
-    return (
-      <HorizontalGroup>
-        Queries are not currently supported.
-      </HorizontalGroup>
-    );
-  }
+  return (
+    <div style={{ paddingTop: '20px' }}>
+      <Field
+        label="Repository ID Filter"
+        description="Query to filter for only the vulnerabilities from the specified GitHub repository ID. Leave blank to query for all repositories."
+      >
+        <Input
+          onChange={onRepoIdChange}
+          placeholder="1234"
+          onBlur={onRunQuery}
+          value={query.githubRepositoryId || ''}
+        />
+      </Field>
+      <Field
+        label="Severity Filter"
+        description="Query to filter for only the vulnerabilities with the selected severity"
+      >
+        <Select
+          options={severity_options}
+          value={query.severity ?? ''}
+          onChange={(v) => onSeverityChange(v.value ?? '')}
+        />
+      </Field>
+    </div>
+  );
 }
