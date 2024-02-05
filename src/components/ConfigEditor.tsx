@@ -1,67 +1,54 @@
-import React, { ChangeEvent } from 'react';
-import { InlineField, Input, SecretInput } from '@grafana/ui';
+import React from 'react';
+import { DataSourceHttpSettings, Field, FieldSet, InlineField, Input, SecretInput, SecretTextArea } from '@grafana/ui';
+import type { NullifyDataSourceOptions } from '../types';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions, MySecureJsonData } from '../types';
+import { useChangeOptions } from '../useChangeOptions';
+import { useChangeSecureOptions } from '../useChangeSecureOptions';
+import { useResetSecureOptions } from '../useResetSecureOptions';
 
-interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
+interface Props extends DataSourcePluginOptionsEditorProps<NullifyDataSourceOptions> {}
 
-export function ConfigEditor(props: Props) {
-  const { onOptionsChange, options } = props;
-  const onPathChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const jsonData = {
-      ...options.jsonData,
-      path: event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData });
-  };
-
-  // Secure field (only sent to the backend)
-  const onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onOptionsChange({
-      ...options,
-      secureJsonData: {
-        apiKey: event.target.value,
-      },
-    });
-  };
-
-  const onResetAPIKey = () => {
-    onOptionsChange({
-      ...options,
-      secureJsonFields: {
-        ...options.secureJsonFields,
-        apiKey: false,
-      },
-      secureJsonData: {
-        ...options.secureJsonData,
-        apiKey: '',
-      },
-    });
-  };
-
-  const { jsonData, secureJsonFields } = options;
-  const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
+export const ConfigEditor: React.FC<Props> = (props: any) => {
+  const { jsonData, secureJsonData, secureJsonFields } = props.options;
+  const onUrlChange = useChangeOptions(props, 'apiHostUrl');
+  const onGithubOwnerIdChange = useChangeOptions(props, 'githubOwnerId');
+  const onApiKeyChange = useChangeSecureOptions(props, 'apiKey');
+  const onResetApiKey = useResetSecureOptions(props, 'apiKey');
 
   return (
-    <div className="gf-form-group">
-      <InlineField label="Path" labelWidth={12}>
-        <Input
-          onChange={onPathChange}
-          value={jsonData.path || ''}
-          placeholder="json field returned to frontend"
-          width={40}
-        />
-      </InlineField>
-      <InlineField label="API Key" labelWidth={12}>
-        <SecretInput
-          isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
-          value={secureJsonData.apiKey || ''}
-          placeholder="secure json field (backend only)"
-          width={40}
-          onReset={onResetAPIKey}
-          onChange={onAPIKeyChange}
-        />
-      </InlineField>
-    </div>
+    <>
+      <FieldSet label="Nullify API Settings">
+        <Field
+          label="Nullify API Host URL"
+          description="URL endpoint host name for the Nullify API. E.g. https://api.YOUR_COMPANY_NAME.nullify.ai"
+        >
+          <Input
+            onChange={onUrlChange}
+            placeholder="https://api.YOUR_COMPANY_NAME.nullify.ai"
+            value={jsonData?.apiHostUrl ?? ''}
+          />
+        </Field>
+        <Field
+          label="GitHub Owner ID"
+          description="Globally unique GitHub ID for individual/organization accounts. ID available at: https://api.github.com/users/YOUR_GITHUB_USERNAME"
+        >
+          <Input onChange={onGithubOwnerIdChange} placeholder="1234" value={jsonData?.githubOwnerId ?? ''} />
+        </Field>
+        <Field
+          label="Nullify API Key"
+          description="API key to access Nullify API endpoints. This key is a securely stored secret and used by the backend only. API Docs: https://docs.nullify.ai/api-reference/nullify-api"
+        >
+          <SecretTextArea
+            isConfigured={Boolean(secureJsonFields.apiKey)}
+            value={secureJsonData?.apiKey || ''}
+            placeholder="eyJ..."
+            cols={200}
+            rows={10}
+            onReset={onResetApiKey}
+            onChange={onApiKeyChange}
+          />
+        </Field>
+      </FieldSet>
+    </>
   );
-}
+};

@@ -1,32 +1,27 @@
-import React, { ChangeEvent } from 'react';
-import { InlineField, Input } from '@grafana/ui';
+import defaults from 'lodash/defaults';
+
+import React, { ChangeEvent, PureComponent } from 'react';
+import { HorizontalGroup } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
-import { DataSource } from '../datasource';
-import { MyDataSourceOptions, MyQuery } from '../types';
+import { NullifySastDataSource } from '../datasource';
+import { defaultQuery, NullifyDataSourceOptions, MyQuery } from '../types';
 
-type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
+type Props = QueryEditorProps<NullifySastDataSource, MyQuery, NullifyDataSourceOptions>;
 
-export function QueryEditor({ query, onChange, onRunQuery }: Props) {
-  const onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
+export class QueryEditor extends PureComponent<Props> {
+  onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { onChange, query } = this.props;
     onChange({ ...query, queryText: event.target.value });
   };
 
-  const onConstantChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, constant: parseFloat(event.target.value) });
-    // executes the query
-    onRunQuery();
-  };
+  render() {
+    const query = defaults(this.props.query, defaultQuery);
+    const { queryText } = query;
 
-  const { queryText, constant } = query;
-
-  return (
-    <div className="gf-form">
-      <InlineField label="Constant">
-        <Input onChange={onConstantChange} value={constant} width={8} type="number" step="0.1" />
-      </InlineField>
-      <InlineField label="Query Text" labelWidth={16} tooltip="Not used yet">
-        <Input onChange={onQueryTextChange} value={queryText || ''} />
-      </InlineField>
-    </div>
-  );
+    return (
+      <HorizontalGroup>
+        Queries are not currently supported.
+      </HorizontalGroup>
+    );
+  }
 }
