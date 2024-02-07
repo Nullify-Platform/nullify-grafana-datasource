@@ -21,6 +21,9 @@ Grafana supports a wide range of data sources, including Prometheus, MySQL, and 
 2. Build plugin in development mode and run in watch mode
 
    ```bash
+   # Spins up a Grafana instance first that we can run our plugin on
+   npm run server
+
    npm run dev
    ```
 

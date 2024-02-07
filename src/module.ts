@@ -1,9 +1,13 @@
 import { DataSourcePlugin } from '@grafana/data';
-import { NullifySastDataSource } from './datasource';
+import { NullifySastSummaryDataSource } from './datasource';
 import { ConfigEditor } from './components/ConfigEditor';
 import { QueryEditor } from './components/QueryEditor';
-import { MyQuery, NullifyDataSourceOptions } from './types';
+import { NullifySastSummaryQueryOptions, NullifyDataSourceOptions } from './types';
 
-export const plugin = new DataSourcePlugin<NullifySastDataSource, MyQuery, NullifyDataSourceOptions>(NullifySastDataSource)
+export const plugin = new DataSourcePlugin<
+  NullifySastSummaryDataSource,
+  NullifySastSummaryQueryOptions,
+  NullifyDataSourceOptions
+>(NullifySastSummaryDataSource)
   .setConfigEditor(ConfigEditor)
   .setQueryEditor(QueryEditor);

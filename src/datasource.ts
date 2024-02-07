@@ -12,8 +12,12 @@ import defaults from 'lodash/defaults';
 import { getBackendSrv, isFetchError } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
-import { defaultQuery, MyQuery, NullifyDataSourceOptions, NullifySastSummaryApiResponse } from './types';
-
+import {
+  NullifySastSummaryDefaultQuery,
+  NullifySastSummaryQueryOptions,
+  NullifyDataSourceOptions,
+  NullifySastSummaryApiResponse,
+} from './types';
 
 const prepend_severity_idx = (severity: string) => {
   severity = severity.toUpperCase();
@@ -31,7 +35,10 @@ const prepend_severity_idx = (severity: string) => {
   }
 };
 
-export class NullifySastDataSource extends DataSourceApi<MyQuery, NullifyDataSourceOptions> {
+export class NullifySastSummaryDataSource extends DataSourceApi<
+  NullifySastSummaryQueryOptions,
+  NullifyDataSourceOptions
+> {
   instanceUrl?: string;
   apiHostUrl: string;
   githubOwnerId: number;
@@ -43,10 +50,10 @@ export class NullifySastDataSource extends DataSourceApi<MyQuery, NullifyDataSou
     this.apiHostUrl = instanceSettings.jsonData.apiHostUrl;
   }
 
-  async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {
+  async query(options: DataQueryRequest<NullifySastSummaryQueryOptions>): Promise<DataQueryResponse> {
     const promises = options.targets.map(async (target) => {
-      const query = defaults(target, defaultQuery);
-      const response = await this.request();
+      const query = defaults(target, NullifySastSummaryDefaultQuery);
+      const response = await this.request_sast_summary(query);
 
       const datapoints: NullifySastSummaryApiResponse = response.data as unknown as NullifySastSummaryApiResponse;
       if (datapoints === undefined || !('vulnerabilities' in datapoints)) {
@@ -90,16 +97,24 @@ export class NullifySastDataSource extends DataSourceApi<MyQuery, NullifyDataSou
     return Promise.all(promises).then((data) => ({ data }));
   }
 
-  // TODO(jqphu): only one path is supported now, sca/events
-  async request() {
-    const response = getBackendSrv().fetch<NullifySastSummaryApiResponse>({
-      url: `${this.instanceUrl}/grafana_proxy/sast/summary?githubOwnerId=${this.githubOwnerId}`,
+  async _request<T>(endpoint_path: string, params: Record<string, any> = {}) {
+    const response = getBackendSrv().fetch<T>({
+      url: `${this.instanceUrl}/grafana_proxy/${endpoint_path}`,
+      params: params,
     });
 
     return await lastValueFrom(response);
   }
 
-  filterQuery(query: MyQuery): boolean {
+  async request_sast_summary(query: NullifySastSummaryQueryOptions) {
+    return await this._request<NullifySastSummaryApiResponse>('sast/summary', {
+      githubOwnerId: this.githubOwnerId,
+      ...(query.githubRepositoryId ? { githubRepositoryId: query.githubRepositoryId } : {}),
+      ...(query.severity ? { severity: query.severity } : {}),
+    });
+  }
+
+  filterQuery(query: NullifySastSummaryQueryOptions): boolean {
     if (query.hide) {
       return false;
     }
@@ -114,7 +129,7 @@ export class NullifySastDataSource extends DataSourceApi<MyQuery, NullifyDataSou
     console.log('Starting test');
 
     try {
-      const response = await this.request();
+      const response = await this.request_sast_summary({ refId: 'testDatasource' });
       if (response.status === 200) {
         return {
           status: 'success',
