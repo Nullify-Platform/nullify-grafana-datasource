@@ -164,7 +164,7 @@ export const processSecretsEvents = async (
       { name: 'finding_filePath', type: FieldType.string, values: finding_filePaths },
       { name: 'finding_author', type: FieldType.string, values: finding_authors },
       { name: 'finding_commit', type: FieldType.string, values: finding_commits },
-      { name: 'finding_timeStamp', type: FieldType.string, values: finding_timeStamps },
+      { name: 'finding_timeStamp', type: FieldType.time, values: finding_timeStamps },
       { name: 'finding_ruleId', type: FieldType.string, values: finding_ruleIds },
       { name: 'finding_entropy', type: FieldType.number, values: finding_entropys },
       { name: 'finding_isBranchHead', type: FieldType.boolean, values: finding_isBranchHeads },

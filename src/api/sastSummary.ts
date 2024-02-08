@@ -48,6 +48,7 @@ export const processSastSummary = async (
   let ids: string[] = [];
   let formatted_severities: string[] = [];
   let severities: string[] = [];
+  let cwes: number[] = [];
   let languages: string[] = [];
   let filePaths: string[] = [];
   let isAutoFixables: boolean[] = [];
@@ -57,6 +58,7 @@ export const processSastSummary = async (
     ids.push(vuln.id);
     formatted_severities.push(prepend_severity_idx(vuln.severity));
     severities.push(vuln.severity);
+    cwes.push(vuln.cwe);
     languages.push(vuln.language);
     filePaths.push(vuln.filePath);
     isAutoFixables.push(vuln.isAutoFixable);
@@ -70,6 +72,7 @@ export const processSastSummary = async (
       { name: 'id', type: FieldType.string, values: ids },
       { name: 'formatted_severity', type: FieldType.string, values: formatted_severities },
       { name: 'severity', type: FieldType.string, values: severities },
+      { name: 'cwe', type: FieldType.number, values: cwes },
       { name: 'language', type: FieldType.string, values: languages },
       { name: 'filePath', type: FieldType.string, values: filePaths },
       { name: 'isAutoFixable', type: FieldType.boolean, values: isAutoFixables },
