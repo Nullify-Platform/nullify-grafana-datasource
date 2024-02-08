@@ -51,26 +51,54 @@ export interface SastEventsQueryParameters {
   branch?: string;
 }
 
-// SCA EVENTS ENDPOINT
+// SCA SUMMARY ENDPOINT
 
 export interface ScaSummaryQueryOptions extends BaseQueryOptions {
   endpoint: 'sca/summary';
-  queryParameters: {}; // NullifyScaSummaryQueryParameters;
+  queryParameters: ScaSummaryQueryParameters;
 }
+
+export interface ScaSummaryQueryParameters {
+  githubRepositoryId?: string;
+  package?: string;
+}
+
+// SCA EVENTS ENDPOINT
 
 export interface ScaEventsQueryOptions extends BaseQueryOptions {
   endpoint: 'sca/events';
-  queryParameters: {}; // NullifyScaEventsQueryParameters;
+  queryParameters: ScaEventsQueryParameters;
 }
+
+export interface ScaEventsQueryParameters {
+  githubRepositoryId?: string;
+  branch?: string;
+}
+
+// SECRETS SUMMARY ENDPOINT
 
 export interface SecretsSummaryQueryOptions extends BaseQueryOptions {
   endpoint: 'secrets/summary';
-  queryParameters: {}; // NullifySecretsSummaryQueryParameters;
+  queryParameters: SecretsSummaryQueryParameters;
 }
+
+export interface SecretsSummaryQueryParameters {
+  githubRepositoryId?: string;
+  branch?: string;
+  type?: string;
+  allowlisted?: boolean;
+}
+
+// SECRETS EVENTS ENDPOINT
 
 export interface SecretsEventsQueryOptions extends BaseQueryOptions {
   endpoint: 'secrets/events';
-  queryParameters: {}; // NullifySecretsEventsQueryParameters;
+  queryParameters: SecretsEventsQueryParameters;
+}
+
+export interface SecretsEventsQueryParameters {
+  githubRepositoryId?: string;
+  branch?: string;
 }
 
 export type NullifyQueryOptions =
@@ -80,6 +108,3 @@ export type NullifyQueryOptions =
   | ScaEventsQueryOptions
   | SecretsSummaryQueryOptions
   | SecretsEventsQueryOptions;
-
-// export const NullifyDefaultQuery: Partial<NullifyQueryOptions> = {
-// };

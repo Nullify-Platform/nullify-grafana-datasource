@@ -1,32 +1,31 @@
 import React, { ChangeEvent } from 'react';
-import { Field, Input, Select } from '@grafana/ui';
-import { QueryEditorProps, SelectableValue } from '@grafana/data';
+import { Field, Input } from '@grafana/ui';
+import { QueryEditorProps } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
-import { NullifyDataSourceOptions, NullifyEndpointPaths, NullifyQueryOptions } from '../../types';
+import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
-export function SastEventsSubquery(props: Props) {
+export function ScaSummarySubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
 
   const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
-      endpoint: 'sast/events',
+      endpoint: 'sca/summary',
       queryParameters: { ...query.queryParameters, githubRepositoryId: event.target.value },
     });
   };
 
-  const onBranchChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onPackageChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
-      endpoint: 'sast/events',
-      queryParameters: { ...query.queryParameters, branch: event.target.value },
+      endpoint: 'sca/summary',
+      queryParameters: { ...query.queryParameters, package: event.target.value },
     });
-    onRunQuery();
   };
 
-  return query.endpoint === 'sast/events' ? (
+  return query.endpoint === 'sca/summary' ? (
     <>
       <Field
         label="Repository ID Filter"
@@ -39,18 +38,14 @@ export function SastEventsSubquery(props: Props) {
           value={query.queryParameters?.githubRepositoryId || ''}
         />
       </Field>
-      <Field
-        label="Branch Filter"
-        description="Query to filter for only the vulnerabilities in a selected branch."
-      >
+      <Field label="Package Filter" description="Query to filter for only the specified package.">
         <Input
-          onChange={onBranchChange}
-          placeholder="main"
+          onChange={onPackageChange}
+          placeholder="react"
           onBlur={onRunQuery}
-          value={query.queryParameters?.branch || ''}
+          value={query.queryParameters?.package || ''}
         />
       </Field>
-        {/* Add event type filter? */}
     </>
   ) : (
     <></>

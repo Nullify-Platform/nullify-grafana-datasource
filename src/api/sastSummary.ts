@@ -41,8 +41,8 @@ export const processSastSummary = async (
     ...(queryOptions.queryParameters.severity ? { severity: queryOptions.queryParameters.severity } : {}),
   });
   const datapoints: SastSummaryApiResponse = response.data as unknown as SastSummaryApiResponse;
-  if (datapoints === undefined || !('vulnerabilities' in datapoints)) {
-    throw new Error('Remote endpoint reponse does not contain "events" property.');
+  if (!datapoints || !('vulnerabilities' in datapoints)) {
+    throw new Error('Remote endpoint does not contain the required field: vulnerabilities');
   }
 
   let ids: string[] = [];

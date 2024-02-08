@@ -6,13 +6,13 @@ import { NullifyDataSourceOptions, NullifyEndpointPaths, NullifyQueryOptions } f
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
-export function SastEventsSubquery(props: Props) {
+export function SecretsEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
 
   const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
-      endpoint: 'sast/events',
+      endpoint: 'secrets/events',
       queryParameters: { ...query.queryParameters, githubRepositoryId: event.target.value },
     });
   };
@@ -20,17 +20,17 @@ export function SastEventsSubquery(props: Props) {
   const onBranchChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
-      endpoint: 'sast/events',
+      endpoint: 'secrets/events',
       queryParameters: { ...query.queryParameters, branch: event.target.value },
     });
     onRunQuery();
   };
 
-  return query.endpoint === 'sast/events' ? (
+  return query.endpoint === 'secrets/events' ? (
     <>
       <Field
         label="Repository ID Filter"
-        description="Query to filter for only the vulnerabilities from the specified GitHub repository ID. Leave blank to query for all repositories."
+        description="Query to filter for only the secrets from the specified GitHub repository ID. Leave blank to query for all repositories."
       >
         <Input
           onChange={onRepoIdChange}
@@ -41,7 +41,7 @@ export function SastEventsSubquery(props: Props) {
       </Field>
       <Field
         label="Branch Filter"
-        description="Query to filter for only the vulnerabilities in a selected branch."
+        description="Query to filter for only the secrets in a selected branch."
       >
         <Input
           onChange={onBranchChange}

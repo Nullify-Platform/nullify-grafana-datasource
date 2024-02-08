@@ -7,6 +7,10 @@ import { lastValueFrom } from 'rxjs';
 import { NullifyDataSourceOptions, NullifyQueryOptions } from './types';
 import { processSastSummary } from 'api/sastSummary';
 import { processSastEvents } from 'api/sastEvents';
+import { processScaSummary } from 'api/scaSummary';
+import { processScaEvents } from 'api/scaEvents';
+import { processSecretsSummary } from 'api/secretsSummary';
+import { processSecretsEvents } from 'api/secretsEvents';
 
 export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, NullifyDataSourceOptions> {
   instanceUrl?: string;
@@ -26,6 +30,14 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
         return processSastSummary(target, this._request.bind(this));
       } else if (target.endpoint === 'sast/events') {
         return processSastEvents(target, options.range, this._request.bind(this));
+      } else if (target.endpoint === 'sca/summary') {
+        return processScaSummary(target, this._request.bind(this));
+      } else if (target.endpoint === 'sca/events') {
+        return processScaEvents(target, options.range, this._request.bind(this));
+      }else if (target.endpoint === 'secrets/summary') {
+        return processSecretsSummary(target, this._request.bind(this));
+      } else if (target.endpoint === 'secrets/events') {
+        return processSecretsEvents(target, options.range, this._request.bind(this));
       }
       return;
     });

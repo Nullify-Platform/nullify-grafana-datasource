@@ -1,51 +1,87 @@
 import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
-import { SastEventsQueryOptions } from 'types';
+import { ScaEventsQueryOptions } from 'types';
 
 const MAX_API_REQUESTS = 10;
 
-interface SastEventsApiResponse {
-  events: SastEventsEvent[];
+interface ScaEventsApiResponse {
+  events: ScaEventsEvent[];
   numItems: number;
   nextEventId: string;
 }
 
-interface SastEventsEvent {
+interface ScaEventsEvent {
   id: string;
   time: string;
-  timestampUnix: number;
-  type: SastEventType;
-  data: SastEventsData;
+  timeUnix: number;
+  type: ScaEventType;
+  data: ScaEventsData;
 }
 
-interface SastEventsData {
+interface ScaEventsData {
   id: string;
-  provider: SastEventsProvider;
-  branch: string;
-  commitHash: string;
-  numFindings: number;
-  numCritical: number;
-  numHigh: number;
-  numMedium: number;
-  numLow: number;
-  numUnknown: number;
-}
-
-interface SastEventsProvider {
-  id: string;
-  github: {
-    installationId: number;
-    ownerId: number;
-    owner: string;
-    ownerType: string;
-    repositoryName: string;
-    repositoryId: number;
-    hasIssue: boolean;
+  provider: {
+    id: string;
+    github: {
+      installationId: number;
+      ownerId: number;
+      owner: string;
+      ownerType: string;
+      repositoryName: string;
+      repositoryId: number;
+      hasIssue: boolean;
+    };
   };
-  bitbucket: any;
+  pullRequestId?: string;
+  branch: string;
+  commit: string;
+  cloneUrl?: string;
+  finding?: ScaEventsFinding;
+  userId?: string;
+  findings?: ScaEventsFinding[];
+  numFindings?: number;
+  numVulnerabilities?: number;
+  numCritical?: number;
+  numHigh?: number;
+  numMedium?: number;
+  numLow?: number;
+  numUnknown?: number;
 }
 
-type SastEventType =
+interface ScaEventsFinding {
+  id: string;
+  isDirect?: boolean;
+  package: string;
+  packageFilePath: string;
+  version: string;
+  filePath: string;
+  line?: number;
+  numHigh?: number;
+  vulnerabilities: ScaEventsVulnerability[];
+  numMedium?: number;
+  numCritical?: number;
+  numLow?: number;
+  numUnknown?: number;
+}
+
+export interface ScaEventsVulnerability {
+  hasFix?: boolean;
+  title: string;
+  details?: string;
+  severity: string;
+  introduced: string;
+  fixed: string;
+  references?: string[];
+  cwes?: string[];
+  cves?: Array<{
+    id: string;
+    epss?: number;
+    epssPercentile?: number;
+    priority: string;
+  }>;
+}
+
+type ScaEventType =
   | 'new-branch-summary'
   | 'new-finding'
   | 'new-findings'
@@ -53,35 +89,29 @@ type SastEventType =
   | 'new-fixes'
   | 'new-allowlisted-finding'
   | 'new-allowlisted-findings'
-  | 'new-unallowlisted-finding'
-  | 'new-unallowlisted-findings'
   | 'new-pull-request-finding'
   | 'new-pull-request-findings'
   | 'new-pull-request-fix'
-  | 'new-pull-request-fixes'
-  | 'new-pull-request-allowlisted-finding'
-  | 'new-pull-request-allowlisted-findings'
-  | 'new-pull-request-unallowlisted-finding'
-  | 'new-pull-request-unallowlisted-findings';
+  | 'new-pull-request-fixes';
 
-interface SastEventsApiRequest {
-  githubRepositoryId?: string;
+interface ScaEventsApiRequest {
   branch?: string;
+  githubRepositoryId?: string;
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
   sort?: string; // asc | desc
 }
 
-export const processSastEvents = async (
-  queryOptions: SastEventsQueryOptions,
+export const processScaEvents = async (
+  queryOptions: ScaEventsQueryOptions,
   range: TimeRange,
-  request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<SastEventsApiResponse>>
+  request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<ScaEventsApiResponse>>
 ): Promise<DataFrame> => {
-  let events: SastEventsEvent[] = [];
+  let events: ScaEventsEvent[] = [];
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
-    const params = {
+    const params: any = {
       ...(queryOptions.queryParameters.githubRepositoryId
         ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
         : {}),
@@ -89,9 +119,9 @@ export const processSastEvents = async (
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
-    console.log('sast event request:', params);
-    const response: any = await request_fn('sast/events', params);
-    const datapoints: SastEventsApiResponse = response.data as unknown as SastEventsApiResponse;
+    console.log('sca event request:', params);
+    const response = await request_fn('sca/events', params);
+    const datapoints: ScaEventsApiResponse = response.data as unknown as ScaEventsApiResponse;
     if (datapoints === undefined || !('events' in datapoints)) {
       throw new Error('Remote endpoint reponse does not contain "events" property.');
     }
@@ -101,7 +131,7 @@ export const processSastEvents = async (
     if (!response.data.events || response.data.events.length === 0 || !response.data.nextEventId) {
       // No more events
       break;
-    } else if (response.data.events[0].timestampUnix > range.to.unix()) {
+    } else if (response.data.events[0].timeUnix > range.to.unix()) {
       // No more events required
       break;
     } else {
@@ -116,7 +146,7 @@ export const processSastEvents = async (
       {
         name: 'time',
         type: FieldType.time,
-        values: events.map((event) => new Date(event.timestampUnix * 1000)),
+        values: events.map((event) => new Date(event.timeUnix * 1000)),
       },
       { name: 'type', type: FieldType.string, values: events.map((event) => event.type) },
       { name: 'numFindings', type: FieldType.number, values: events.map((event) => event.data.numFindings) },

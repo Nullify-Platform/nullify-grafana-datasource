@@ -6,13 +6,13 @@ import { NullifyDataSourceOptions, NullifyEndpointPaths, NullifyQueryOptions } f
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
-export function SastEventsSubquery(props: Props) {
+export function ScaEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
 
   const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
-      endpoint: 'sast/events',
+      endpoint: 'sca/events',
       queryParameters: { ...query.queryParameters, githubRepositoryId: event.target.value },
     });
   };
@@ -20,13 +20,13 @@ export function SastEventsSubquery(props: Props) {
   const onBranchChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
-      endpoint: 'sast/events',
+      endpoint: 'sca/events',
       queryParameters: { ...query.queryParameters, branch: event.target.value },
     });
     onRunQuery();
   };
 
-  return query.endpoint === 'sast/events' ? (
+  return query.endpoint === 'sca/events' ? (
     <>
       <Field
         label="Repository ID Filter"

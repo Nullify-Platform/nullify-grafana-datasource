@@ -5,6 +5,10 @@ import { NullifyDataSource } from '../../datasource';
 import { NullifyDataSourceOptions, NullifyEndpointPaths, NullifyQueryOptions } from '../../types';
 import { SastSummarySubquery } from './SastSummarySubquery';
 import { SastEventsSubquery } from './SastEventsSubquery';
+import { ScaEventsSubquery } from './ScaEventsSubquery';
+import { ScaSummarySubquery } from './ScaSummarySubquery';
+import { SecretsSummarySubquery } from './SecretsSummarySubquery';
+import { SecretsEventsSubquery } from './SecretsEventsSubquery';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
@@ -23,6 +27,10 @@ export function QueryEditor(props: Props) {
   const endpoint_options: Array<SelectableValue<NullifyEndpointPaths>> = [
     { value: 'sast/summary', label: 'SAST Summary' },
     { value: 'sast/events', label: 'SAST Events' },
+    { value: 'sca/summary', label: 'SCA Summary' },
+    { value: 'sca/events', label: 'SCA Events' },
+    { value: 'secrets/summary', label: 'Secrets Summary' },
+    { value: 'secrets/events', label: 'Secrets Events' },
   ];
 
   return (
@@ -37,6 +45,10 @@ export function QueryEditor(props: Props) {
       <div style={{ height: '15px' }}></div>
       <SastSummarySubquery {...props} />
       <SastEventsSubquery {...props} />
+      <ScaSummarySubquery {...props} />
+      <ScaEventsSubquery {...props} />
+      <SecretsSummarySubquery {...props} />
+      <SecretsEventsSubquery {...props} />
     </div>
   );
 }
