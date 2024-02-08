@@ -4,11 +4,11 @@ import { ScaSummaryQueryOptions } from 'types';
 import { prepend_severity_idx } from 'utils/utils';
 
 interface ScaSummaryApiResponse {
-  vulnerabilities: ScaSummaryVulnerability[];
+  vulnerabilities: ScaSummaryPackage[];
   numItems: number;
 }
 
-interface ScaSummaryVulnerability {
+interface ScaSummaryPackage {
   id: string;
   isDirect?: boolean;
   package: string;
@@ -18,12 +18,12 @@ interface ScaSummaryVulnerability {
   line?: number;
   numHigh?: number;
   numMedium?: number;
-  vulnerabilities: Vulnerability[];
+  vulnerabilities: ScaSummaryPackageVulnerability[];
   numCritical?: number;
   numLow?: number;
 }
 
-interface Vulnerability {
+interface ScaSummaryPackageVulnerability {
   hasFix?: boolean;
   title: string;
   details: string;
@@ -53,10 +53,21 @@ export const processScaSummary = async (
     throw new Error('Remote endpoint does not contain the required field: vulnerabilities');
   }
 
+
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
       { name: 'id', type: FieldType.string, values: datapoints.vulnerabilities.map((vuln) => vuln.id) },
+      { name: 'isDirect', type: FieldType.string, values: datapoints.vulnerabilities.map((vuln) => vuln.isDirect) },
+      { name: 'package', type: FieldType.string, values: datapoints.vulnerabilities.map((vuln) => vuln.package) },
+      { name: 'packageFilePath', type: FieldType.string, values: datapoints.vulnerabilities.map((vuln) => vuln.packageFilePath) },
+      { name: 'version', type: FieldType.string, values: datapoints.vulnerabilities.map((vuln) => vuln.version) },
+      { name: 'filePath', type: FieldType.string, values: datapoints.vulnerabilities.map((vuln) => vuln.filePath) },
+      { name: 'numCritical', type: FieldType.number, values: datapoints.vulnerabilities.map((vuln) => vuln.numCritical ?? 0) },
+      { name: 'numHigh', type: FieldType.number, values: datapoints.vulnerabilities.map((vuln) => vuln.numHigh ?? 0) },
+      { name: 'numMedium', type: FieldType.number, values: datapoints.vulnerabilities.map((vuln) => vuln.numMedium ?? 0) },
+      { name: 'numLow', type: FieldType.number, values: datapoints.vulnerabilities.map((vuln) => vuln.numLow ?? 0) },
+      { name: 'numVulnerabilities', type: FieldType.number, values: datapoints.vulnerabilities.map((vuln) => vuln.vulnerabilities?.length ?? 0) },
     ],
   });
 };
