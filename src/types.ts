@@ -49,6 +49,7 @@ export interface SastEventsQueryOptions extends BaseQueryOptions {
 export interface SastEventsQueryParameters {
   githubRepositoryId?: string;
   branch?: string;
+  eventTypes?: string[];
 }
 
 // SCA SUMMARY ENDPOINT
@@ -73,6 +74,7 @@ export interface ScaEventsQueryOptions extends BaseQueryOptions {
 export interface ScaEventsQueryParameters {
   githubRepositoryId?: string;
   branch?: string;
+  eventTypes?: string[];
 }
 
 // SECRETS SUMMARY ENDPOINT
@@ -99,6 +101,7 @@ export interface SecretsEventsQueryOptions extends BaseQueryOptions {
 export interface SecretsEventsQueryParameters {
   githubRepositoryId?: string;
   branch?: string;
+  eventTypes?: string[];
 }
 
 export type NullifyQueryOptions =

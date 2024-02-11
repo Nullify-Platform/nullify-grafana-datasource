@@ -90,6 +90,9 @@ export const processSecretsEvents = async (
         ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
         : {}),
       ...(queryOptions.queryParameters.branch ? { severity: queryOptions.queryParameters.branch } : {}),
+      ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
+        ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
+        : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
@@ -99,7 +102,9 @@ export const processSecretsEvents = async (
     if (datapoints === undefined || !('events' in datapoints)) {
       throw new Error('Remote endpoint reponse does not contain "events" property.');
     }
-    events.push(...response.data.events);
+    if (response?.data?.events) {
+      events.push(...response.data.events);
+    }
     console.log('response', response);
     console.log('events', events);
     if (!response.data.events || response.data.events.length === 0 || !response.data.nextEventId) {
@@ -114,6 +119,7 @@ export const processSecretsEvents = async (
   }
 
   let ids: string[] = [];
+  let types: string[] = [];
   let branchs: string[] = [];
   let commits: string[] = [];
   let repository_names: string[] = [];
@@ -133,6 +139,7 @@ export const processSecretsEvents = async (
   for (const event of events) {
     for (const finding of event.data.findings ?? [event.data.finding]) {
       ids.push(event.id);
+      types.push(event.type);
       branchs.push(event.data.branch);
       commits.push(event.data.commit);
       repository_names.push(event.data.provider.github.repositoryName);
@@ -155,6 +162,7 @@ export const processSecretsEvents = async (
     refId: queryOptions.refId,
     fields: [
       { name: 'id', type: FieldType.string, values: ids },
+      { name: 'type', type: FieldType.string, values: types },
       { name: 'branch', type: FieldType.string, values: branchs },
       { name: 'commit', type: FieldType.string, values: commits },
       { name: 'repository_name', type: FieldType.string, values: repository_names },

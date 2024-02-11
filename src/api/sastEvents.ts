@@ -71,6 +71,7 @@ interface SastEventsApiRequest {
   fromEvent?: string;
   numItems?: number; //max 100
   sort?: string; // asc | desc
+  eventTypes?: string; //comma separated types
 }
 
 export const processSastEvents = async (
@@ -86,6 +87,9 @@ export const processSastEvents = async (
         ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
         : {}),
       ...(queryOptions.queryParameters.branch ? { severity: queryOptions.queryParameters.branch } : {}),
+      ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
+        ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
+        : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
@@ -95,7 +99,9 @@ export const processSastEvents = async (
     if (datapoints === undefined || !('events' in datapoints)) {
       throw new Error('Remote endpoint reponse does not contain "events" property.');
     }
-    events.push(...response.data.events);
+    if (response?.data?.events) {
+      events.push(...response.data.events);
+    }
     console.log('response', response);
     console.log('events', events);
     if (!response.data.events || response.data.events.length === 0 || !response.data.nextEventId) {
