@@ -13,7 +13,7 @@ export function useChangeSecureOptions(props: DataSourcePluginOptionsEditorProps
         ...options,
         secureJsonData: {
           ...options.secureJsonData,
-          [propertyName]: event.target.value,
+          [propertyName]: event.target.value.trim(),
         },
       });
     },
