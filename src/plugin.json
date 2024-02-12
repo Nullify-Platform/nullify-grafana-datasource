@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
   "type": "datasource",
-  "name": "Nullify Grafana Datasource",
+  "name": "Nullify",
   "id": "nullify-grafana-datasource",
   "metrics": true,
   "info": {
@@ -9,10 +9,10 @@
     "author": {
       "name": "Nullify"
     },
-    "keywords": ["datasource"],
+    "keywords": ["nullify"],
     "logos": {
-      "small": "img/logo.svg",
-      "large": "img/logo.svg"
+      "small": "img/nullify-icon-logo-classic.svg",
+      "large": "img/nullify-icon-logo-classic.svg"
     },
     "links": [],
     "screenshots": [],
