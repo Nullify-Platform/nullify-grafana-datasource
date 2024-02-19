@@ -1,6 +1,6 @@
 {
   "name": "nullify-grafana-datasource",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Grafana datasource for the Nullify API",
   "scripts": {
     "build": "webpack -c ./webpack.config.ts --env production",
