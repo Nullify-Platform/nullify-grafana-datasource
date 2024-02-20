@@ -1,25 +1,166 @@
 # This GitHub Action automates the process of building Grafana plugins.
 # (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
 name: Release
-
 on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: Create a draft release
+        required: true
+        type: boolean
+        default: false
   push:
-    tags:
-      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
+    branches:
+      - main
 
+concurrency:
+  group: release
+  cancel-in-progress: true
+run-name: Release by @${{ github.actor }} ${{ github.sha }}
 permissions:
   contents: write
-
+  packages: write
+  id-token: write
+  pull-requests: read
 jobs:
-  release:
+  get-version:
+    name: Version
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - uses: grafana/plugin-actions/build-plugin@release
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
-        #with:
-        # Make sure to save the token in your repository secrets
-        #policy_token: $
-        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
-        #grafana_token: $
+      - name: Get Release Version
+        id: get-version
+        uses: nullify-platform/github-actions/actions/release-version@main
+      - run: |
+          echo "**Version:** ${{ steps.get-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Short SHA:** $(git rev-parse --short HEAD)" >> $GITHUB_STEP_SUMMARY
+
+  release:
+    if: ${{ needs.get-version.outputs.version != 'undefined' }}
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [get-version]
+    env:
+      GRAFANA_ACCESS_POLICY_TOKEN: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }} # empty string if does not exist
+      GRAFANA_API_KEY: ${{ secrets.GRAFANA_API_KEY }} # empty string if does not exist
+    steps:
+      - name: Checkout commit
+        uses: actions/checkout@v4
+
+      - name: Set version in npm and plugin.json
+        run: |
+          npm version ${{ needs.get-version.outputs.version }} --no-git-tag-version
+        shell: bash
+
+      ### START COPIED FROM https://github.com/grafana/plugin-actions/blob/release/build-plugin/action.yml
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Setup Go environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+
+      - name: Install dependencies
+        run: npm ci
+        shell: bash
+
+      - name: Build and test frontend
+        run: npm run build
+        shell: bash
+
+      - name: Check for backend
+        id: check-for-backend
+        run: |
+          if [ -f "Magefile.go" ]
+          then
+            echo "has-backend=true" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      - name: Test backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@v2
+        with:
+          version: latest
+          args: coverage
+
+      - name: Build backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@v2
+        with:
+          version: latest
+          args: buildAll
+
+      - name: Warn missing Grafana access policy token
+        run: |
+          echo Please generate a Grafana access policy token: https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token
+          echo Once done please follow the instructions found here: https://github.com/${{github.repository}}/blob/main/README.md#using-github-actions-release-workflow
+        if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN == '' }}
+        shell: bash
+
+      - name: Sign plugin
+        run: ${{ github.action_path }}/pm.sh sign
+        shell: bash
+        env:
+          GRAFANA_ACCESS_POLICY_TOKEN: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN }}
+          GRAFANA_API_KEY: ${{ env.GRAFANA_API_KEY }}
+        if: ${{ env.GRAFANA_ACCESS_POLICY_TOKEN != '' }}
+
+      - name: Get plugin metadata
+        id: metadata
+        run: |
+          sudo apt-get install jq
+
+          export GRAFANA_PLUGIN_ID=$(cat dist/plugin.json | jq -r .id)
+          export GRAFANA_PLUGIN_VERSION=$(cat dist/plugin.json | jq -r .info.version)
+          export GRAFANA_PLUGIN_TYPE=$(cat dist/plugin.json | jq -r .type)
+          export GRAFANA_PLUGIN_ARTIFACT=${GRAFANA_PLUGIN_ID}-${GRAFANA_PLUGIN_VERSION}.zip
+          export GRAFANA_PLUGIN_ARTIFACT_SHA1SUM=${GRAFANA_PLUGIN_ARTIFACT}.sha1
+
+          echo "plugin-id=${GRAFANA_PLUGIN_ID}" >> $GITHUB_OUTPUT
+          echo "plugin-version=${GRAFANA_PLUGIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "plugin-type=${GRAFANA_PLUGIN_TYPE}" >> $GITHUB_OUTPUT
+          echo "archive=${GRAFANA_PLUGIN_ARTIFACT}" >> $GITHUB_OUTPUT
+          echo "archive-sha1sum=${GRAFANA_PLUGIN_ARTIFACT_SHA1SUM}" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Read changelog
+        id: changelog
+        run: |
+          awk '/^## / {s++} s == 1 {print}' CHANGELOG.md > release_notes.md
+          echo "path=release_notes.md" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Package plugin
+        id: package-plugin
+        run: |
+          mv dist ${{ steps.metadata.outputs.plugin-id }}
+          zip ${{ steps.metadata.outputs.archive }} ${{ steps.metadata.outputs.plugin-id }} -r
+          sha1sum ${{ steps.metadata.outputs.archive }} | cut -f1 -d' ' > ${{ steps.metadata.outputs.archive-sha1sum }}
+        shell: bash
+
+      - name: Validate plugin
+        run: |
+          git clone https://github.com/grafana/plugin-validator
+          pushd ./plugin-validator/pkg/cmd/plugincheck2
+          go install
+          popd
+          plugincheck2 -config ./plugin-validator/config/default.yaml ${{ steps.metadata.outputs.archive }}
+        shell: bash
+      ### END COPIED FROM
+
+      - name: Create Github release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          generate_release_notes: true
+          append_body: true
+          tag_name: v${{ steps.metadata.outputs.plugin-version }}
+          token: ${{ github.token }}
+          files: |
+            ./${{ steps.metadata.outputs.archive }}
+            ./${{ steps.metadata.outputs.archive-sha1sum }}
