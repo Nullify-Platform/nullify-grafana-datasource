@@ -1,72 +1,93 @@
+import { z } from 'zod';
 import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
 import { SecretsEventsQueryOptions } from 'types';
+import { SecretsScannerFindingEvent } from './secretsCommon';
 
 const MAX_API_REQUESTS = 10;
 
-interface SecretsEventsApiResponse {
-  events: SecretsEventsEvent[];
-  numItems: number;
-  nextEventId: string;
-}
+const _BaseEventSchema = z.object({
+  id: z.string(),
+  time: z.string(),
+  timestampUnix: z.number(),
+});
 
-export interface SecretsEventsEvent {
-  id: string;
-  time: string;
-  timestampUnix: number;
-  type: SecretsEventType;
-  data: SecretsEventData;
-}
+const SecretsEventsGitProvider = z.object({
+  id: z.string(),
+  github: z
+    .object({
+      installationId: z.number(),
+      ownerId: z.number(),
+      owner: z.string(),
+      ownerType: z.string(),
+      repositoryName: z.string(),
+      repositoryId: z.number(),
+      hasIssue: z.boolean(),
+    })
+    .optional(),
+  bitbucket: z.any().optional(),
+});
 
-type SecretsEventType = 'new-finding' | 'new-findings' | 'new-allowlisted-finding' | 'new-allowlisted-findings';
+const SecretsEventsEventSchema = z.union([
+  _BaseEventSchema.extend({
+    type: z.literal('new-finding'),
+    data: z.object({
+      id: z.string(),
+      branch: z.string(),
+      commit: z.string(),
+      cloneUrl: z.string(),
+      provider: SecretsEventsGitProvider,
+      finding: SecretsScannerFindingEvent,
+      userId: z.string(),
+    }),
+  }),
+  _BaseEventSchema.extend({
+    type: z.literal('new-findings'),
+    data: z.object({
+      id: z.string(),
+      part: z.number().optional(),
+      branch: z.string(),
+      commit: z.string(),
+      cloneUrl: z.string(),
+      provider: SecretsEventsGitProvider,
+      findings: z.array(SecretsScannerFindingEvent).nullable(),
+      userId: z.string(),
+    }),
+  }),
+  _BaseEventSchema.extend({
+    type: z.literal('new-allowlisted-finding'),
+    data: z.object({
+      id: z.string(),
+      branch: z.string(),
+      commit: z.string(),
+      cloneUrl: z.string(),
+      provider: SecretsEventsGitProvider,
+      finding: SecretsScannerFindingEvent,
+      userId: z.string(),
+    }),
+  }),
+  _BaseEventSchema.extend({
+    type: z.literal('new-allowlisted-findings'),
+    data: z.object({
+      id: z.string(),
+      part: z.number().optional(),
+      branch: z.string(),
+      commit: z.string(),
+      cloneUrl: z.string(),
+      provider: SecretsEventsGitProvider,
+      findings: z.array(SecretsScannerFindingEvent).nullable(),
+      userId: z.string(),
+    }),
+  }),
+]);
 
-export interface SecretsEventData {
-  id: string;
-  branch: string;
-  commit: string;
-  cloneUrl: string;
-  provider: {
-    id: string;
-    github: {
-      installationId: number;
-      ownerId: number;
-      owner: string;
-      ownerType: string;
-      repositoryName: string;
-      repositoryId: number;
-      hasIssue: boolean;
-    };
-    bitbucket: null;
-  };
-  finding?: SecretsEventFinding;
-  userId: string;
-  part?: number;
-  findings?: SecretsEventFinding[];
-}
+const SecretsEventsApiResponseSchema = z.object({
+  events: z.array(SecretsEventsEventSchema).nullable().nullable(),
+  numItems: z.number(),
+  nextEventId: z.string(),
+});
 
-export interface SecretsEventFinding {
-  id: string;
-  secretType: string;
-  value: string;
-  filePath: string;
-  author: string;
-  commit: string;
-  timeStamp: string;
-  ruleId: string;
-  entropy: number;
-  startLine: number;
-  endLine: number;
-  startColumn: number;
-  endColumn: number;
-  secret: string;
-  secretHash: string;
-  match: string;
-  hyperlink: string;
-  isBranchHead: boolean;
-  branches: null;
-  firstCommitTimestamp: string;
-  isAllowlisted: boolean;
-}
+type SecretsEventsEvent = z.infer<typeof SecretsEventsEventSchema>;
 
 interface SecretsEventsApiRequest {
   branch?: string;
@@ -80,7 +101,7 @@ interface SecretsEventsApiRequest {
 export const processSecretsEvents = async (
   queryOptions: SecretsEventsQueryOptions,
   range: TimeRange,
-  request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<SecretsEventsApiResponse>>
+  request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
   let events: SecretsEventsEvent[] = [];
   let prevEventId = null;
@@ -96,25 +117,29 @@ export const processSecretsEvents = async (
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
-    console.log('secrets event request:', params);
+
     const response = await request_fn('secrets/events', params);
-    const datapoints: SecretsEventsApiResponse = response.data as unknown as SecretsEventsApiResponse;
-    if (datapoints === undefined || !('events' in datapoints)) {
-      throw new Error('Remote endpoint reponse does not contain "events" property.');
+
+    const parseResult = SecretsEventsApiResponseSchema.safeParse(response.data);
+    if (!parseResult.success) {
+      console.error('Error in data from secrets event API', parseResult.error);
+      console.log('Secrets event request:', params);
+      console.log('Secrets event response:', response);
+      throw new Error(`Data from the API is misformed. See console log for more details.`);
     }
-    if (response?.data?.events) {
-      events.push(...response.data.events);
+
+    if (parseResult.data.events) {
+      events.push(...parseResult.data.events);
     }
-    console.log('response', response);
-    console.log('events', events);
-    if (!response.data.events || response.data.events.length === 0 || !response.data.nextEventId) {
+    // console.log('Secrets events', events);
+    if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
       break;
-    } else if (response.data.events[0].timestampUnix > range.to.unix()) {
+    } else if (parseResult.data.events[0].timestampUnix > range.to.unix()) {
       // No more events required
       break;
     } else {
-      prevEventId = response.data.nextEventId;
+      prevEventId = parseResult.data.nextEventId;
     }
   }
 
@@ -137,24 +162,29 @@ export const processSecretsEvents = async (
   let finding_isAllowlisteds: Array<boolean | undefined> = [];
 
   for (const event of events) {
-    for (const finding of event.data.findings ?? [event.data.finding]) {
+    let findings =
+      event.type === 'new-finding' || event.type === 'new-allowlisted-finding'
+        ? [event.data.finding]
+        : event.data.findings ?? [];
+
+    for (const finding of findings) {
       ids.push(event.id);
       types.push(event.type);
       branchs.push(event.data.branch);
       commits.push(event.data.commit);
-      repository_names.push(event.data.provider.github.repositoryName);
-      repository_ids.push(event.data.provider.github.repositoryId);
-      finding_ids.push(finding?.id ?? '');
-      finding_secretTypes.push(finding?.secretType ?? '');
-      finding_filePaths.push(finding?.filePath ?? '');
-      finding_authors.push(finding?.author ?? '');
-      finding_commits.push(finding?.commit ?? '');
-      finding_timeStamps.push(new Date(finding?.timeStamp ?? 0));
-      finding_ruleIds.push(finding?.ruleId ?? '');
-      finding_entropys.push(finding?.entropy ?? -1);
-      finding_isBranchHeads.push(finding?.isBranchHead);
-      finding_firstCommitTimestamps.push(new Date(finding?.firstCommitTimestamp ?? 0));
-      finding_isAllowlisteds.push(finding?.isAllowlisted);
+      repository_names.push(event.data.provider.github?.repositoryName ?? '');
+      repository_ids.push(event.data.provider.github?.repositoryId ?? -1);
+      finding_ids.push(finding.id);
+      finding_secretTypes.push(finding.secretType);
+      finding_filePaths.push(finding.filePath);
+      finding_authors.push(finding.author);
+      finding_commits.push(finding.commit);
+      finding_timeStamps.push(new Date(finding.timeStamp));
+      finding_ruleIds.push(finding.ruleId);
+      finding_entropys.push(finding.entropy);
+      finding_isBranchHeads.push(finding.isBranchHead);
+      finding_firstCommitTimestamps.push(new Date(finding.firstCommitTimestamp));
+      finding_isAllowlisteds.push(finding.isAllowlisted);
     }
   }
 

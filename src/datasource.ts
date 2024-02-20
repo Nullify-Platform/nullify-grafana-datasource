@@ -1,4 +1,11 @@
-import { DataQueryRequest, DataQueryResponse, DataSourceApi, DataSourceInstanceSettings } from '@grafana/data';
+import {
+  DataQueryRequest,
+  DataQueryResponse,
+  DataSourceApi,
+  DataSourceInstanceSettings,
+  TimeRange,
+  dateTime,
+} from '@grafana/data';
 
 import _ from 'lodash';
 import { getBackendSrv, isFetchError } from '@grafana/runtime';
@@ -34,7 +41,7 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
         return processScaSummary(target, this._request.bind(this));
       } else if (target.endpoint === 'sca/events') {
         return processScaEvents(target, options.range, this._request.bind(this));
-      }else if (target.endpoint === 'secrets/summary') {
+      } else if (target.endpoint === 'secrets/summary') {
         return processSecretsSummary(target, this._request.bind(this));
       } else if (target.endpoint === 'secrets/events') {
         return processSecretsEvents(target, options.range, this._request.bind(this));
@@ -61,36 +68,70 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
    * Checks whether we can connect to the API.
    */
   async testDatasource() {
-    const defaultErrorMessage = 'Cannot connect to API';
     console.log('Starting test');
 
-    try {
-      const response = await this._request('sast/summary');
-      if (response.status === 200) {
-        return {
-          status: 'success',
-          message: 'Success',
-        };
-      } else {
-        return {
-          status: 'error',
-          message: response.statusText ? response.statusText : defaultErrorMessage,
-        };
-      }
-    } catch (err) {
-      let message = '';
-      if (_.isString(err)) {
-        message = err;
-      } else if (isFetchError(err)) {
-        message = 'Fetch error: ' + (err.statusText ? err.statusText : defaultErrorMessage);
-        if (err.data && err.data.error && err.data.error.code) {
-          message += ': ' + err.data.error.code + '. ' + err.data.error.message;
+    let testFromDate = dateTime(new Date()).subtract(30, 'day');
+    let testToDate = dateTime(new Date());
+    let testTimeRange: TimeRange = { from: testFromDate, to: testToDate, raw: { from: testFromDate, to: testToDate } };
+
+    const promises = [
+      processSastSummary(
+        { refId: 'test', endpoint: 'sast/summary', queryParameters: {} },
+        this._request.bind(this)
+      ).catch((err) => ({ status: 'error', message: `Error in SAST Summary: ${JSON.stringify(err.message ?? err)}` })),
+      processSastEvents(
+        { refId: 'test', endpoint: 'sast/events', queryParameters: {} },
+        testTimeRange,
+        this._request.bind(this)
+      ).catch((err) => ({ status: 'error', message: `Error in SAST Events: ${JSON.stringify(err.message ?? err)}` })),
+      processScaSummary(
+        { refId: 'test', endpoint: 'sca/summary', queryParameters: {} },
+        this._request.bind(this)
+      ).catch((err) => ({ status: 'error', message: `Error in SCA Summary: ${JSON.stringify(err.message ?? err)}` })),
+      processScaEvents(
+        { refId: 'test', endpoint: 'sca/events', queryParameters: {} },
+        testTimeRange,
+        this._request.bind(this)
+      ).catch((err) => ({ status: 'error', message: `Error in SCA Events: ${JSON.stringify(err.message ?? err)}` })),
+      processSecretsSummary(
+        { refId: 'test', endpoint: 'secrets/summary', queryParameters: {} },
+        this._request.bind(this)
+      ).catch((err) => ({ status: 'error', message: `Error in Secrets Summary: ${JSON.stringify(err.message ?? err)}` })),
+      processSecretsEvents(
+        { refId: 'test', endpoint: 'secrets/events', queryParameters: {} },
+        testTimeRange,
+        this._request.bind(this)
+      ).catch((err) => ({ status: 'error', message: `Error in Secrets Events: ${JSON.stringify(err.message ?? err)}` })),
+    ];
+  
+    const results = await Promise.allSettled(promises);
+    const err: string[] = [];
+
+    results.forEach((result) => {
+      if (result.status === 'rejected') {
+        if (isFetchError(result.reason)) {
+          err.push(`Fetch error: ${result.reason.statusText}`);
+        } else {
+          err.push(result.reason);
         }
+      } else if (result.status === 'fulfilled' && 'status' in result.value && result.value.status === 'error') {
+        err.push(result.value.message);
       }
+    });
+    
+    if (err.length > 0) {
+      console.error('Test failed', err.join('\n'));
       return {
         status: 'error',
-        message,
+        message: err.join('\n'),
       };
     }
+
+    console.log('Tests completed - all tests passed');
+
+    return {
+      status: 'success',
+      message: 'All tests passed',
+    };
   }
 }

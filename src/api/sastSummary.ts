@@ -1,38 +1,18 @@
+import { z } from 'zod';
 import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
 import { SastSummaryQueryOptions } from 'types';
 import { prepend_severity_idx } from 'utils/utils';
+import { SastFinding } from './sastCommon';
 
-interface SastSummaryVulnerability {
-  id: string;
-  title: string;
-  severity: string;
-  language: string;
-  message: string;
-  filePath: string;
-  cwe: number;
-  ruleId: string;
-  ruleUrl: string;
-  startLine: number;
-  endLine: number;
-  isAutoFixable: boolean;
-  suggestions?: any[];
-  exampleFixes?: any[];
-  isAllowlisted: boolean;
-  latest: boolean;
-}
-
-interface SastSummaryApiResponse {
-  vulnerabilities: SastSummaryVulnerability[];
-  numItems: number;
-}
+const SastSummaryApiResponseSchema = z.object({
+  vulnerabilities: z.array(SastFinding),
+  numItems: z.number(),
+});
 
 export const processSastSummary = async (
   queryOptions: SastSummaryQueryOptions,
-  request_fn: (
-    endpoint_path: string,
-    params?: Record<string, any>
-  ) => Promise<FetchResponse<SastSummaryApiResponse>>
+  request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
   const response = await request_fn('sast/summary', {
     ...(queryOptions.queryParameters.githubRepositoryId
@@ -40,44 +20,45 @@ export const processSastSummary = async (
       : {}),
     ...(queryOptions.queryParameters.severity ? { severity: queryOptions.queryParameters.severity } : {}),
   });
-  const datapoints: SastSummaryApiResponse = response.data as unknown as SastSummaryApiResponse;
-  if (!datapoints || !('vulnerabilities' in datapoints)) {
-    throw new Error('Remote endpoint does not contain the required field: vulnerabilities');
-  }
+  console.log('sast summary response:', response);
 
-  let ids: string[] = [];
-  let formatted_severities: string[] = [];
-  let severities: string[] = [];
-  let cwes: number[] = [];
-  let languages: string[] = [];
-  let filePaths: string[] = [];
-  let isAutoFixables: boolean[] = [];
-  let isAllowlisteds: boolean[] = [];
-  let latests: boolean[] = [];
-  for (const vuln of datapoints.vulnerabilities) {
-    ids.push(vuln.id);
-    formatted_severities.push(prepend_severity_idx(vuln.severity));
-    severities.push(vuln.severity);
-    cwes.push(vuln.cwe);
-    languages.push(vuln.language);
-    filePaths.push(vuln.filePath);
-    isAutoFixables.push(vuln.isAutoFixable);
-    isAllowlisteds.push(vuln.isAllowlisted);
-    latests.push(vuln.latest);
+  const parseResult = SastSummaryApiResponseSchema.safeParse(response.data);
+  if (!parseResult.success) {
+    console.error('Error in data from sast summary API', parseResult.error);
+    console.log('SAST summary response:', response);
+    throw new Error(`Data from the API is misformed. See console log for more details.`);
   }
 
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: ids },
-      { name: 'formatted_severity', type: FieldType.string, values: formatted_severities },
-      { name: 'severity', type: FieldType.string, values: severities },
-      { name: 'cwe', type: FieldType.number, values: cwes },
-      { name: 'language', type: FieldType.string, values: languages },
-      { name: 'filePath', type: FieldType.string, values: filePaths },
-      { name: 'isAutoFixable', type: FieldType.boolean, values: isAutoFixables },
-      { name: 'isAllowlisted', type: FieldType.boolean, values: isAllowlisteds },
-      { name: 'latest', type: FieldType.boolean, values: latests },
+      { name: 'id', type: FieldType.string, values: parseResult.data.vulnerabilities.map((vuln) => vuln.id) },
+      {
+        name: 'formatted_severity',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => prepend_severity_idx(vuln.severity)),
+      },
+      {
+        name: 'severity',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.severity),
+      },
+      { name: 'cwe', type: FieldType.number, values: parseResult.data.vulnerabilities.map((vuln) => vuln.cwe) },
+      {
+        name: 'language',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.language),
+      },
+      {
+        name: 'filePath',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.filePath),
+      },
+      {
+        name: 'isAllowlisted',
+        type: FieldType.boolean,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.isAllowlisted),
+      },
     ],
   });
 };
