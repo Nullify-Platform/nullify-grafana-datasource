@@ -70,7 +70,8 @@
     "@grafana/ui": "10.1.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "tslib": "2.5.3"
+    "tslib": "2.5.3",
+    "zod": "^3.22.4"
   },
   "packageManager": "npm@9.8.1"
 }
