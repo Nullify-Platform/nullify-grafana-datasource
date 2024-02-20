@@ -24,7 +24,9 @@ export const processSastSummary = async (
 
   const parseResult = SastSummaryApiResponseSchema.safeParse(response.data);
   if (!parseResult.success) {
-    throw new Error(`Data from the API is misformed. Error:${parseResult.error}`);
+    console.error('Error in data from sast summary API', parseResult.error);
+    console.log('SAST summary response:', response);
+    throw new Error(`Data from the API is misformed. See console log for more details.`);
   }
 
   return createDataFrame({

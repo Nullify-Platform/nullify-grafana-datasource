@@ -28,7 +28,6 @@ const ScaEventsGitProvider = z.object({
   bitbucket: z.any().optional(),
 });
 
-
 const ScaEventsEventSchema = z.union([
   _BaseEventSchema.extend({
     type: z.literal('new-branch-summary'),
@@ -233,20 +232,21 @@ export const processScaEvents = async (
       sort: 'asc',
     };
 
-    console.log('sca event request:', params);
     const response = await request_fn('sca/events', params);
-    console.log('sca event response:', response);
 
     const parseResult = ScaEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
-      throw new Error(`Data from the API is misformed. Error:${parseResult.error}`);
+      console.error('Error in data from sca events API', parseResult.error);
+      console.log('sca events request:', params);
+      console.log('sca events response:', response);
+      throw new Error(`Data from the API is misformed. See console log for more details.`);
     }
 
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    console.log('parseResult', parseResult);
-    console.log('events', events);
+    // console.log('parseResult', parseResult);
+    // console.log('events', events);
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
       break;

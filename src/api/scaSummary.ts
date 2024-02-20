@@ -19,11 +19,12 @@ export const processScaSummary = async (
       : {}),
     ...(queryOptions.queryParameters.package ? { package: queryOptions.queryParameters.package } : {}),
   });
-  console.log('sca summary response:', response);
 
   const parseResult = ScaSummaryApiResponseSchema.safeParse(response.data);
   if (!parseResult.success) {
-    throw new Error(`Data from the API is misformed. Error:${parseResult.error}`);
+    console.error('Error in data from sca summary API', parseResult.error);
+    console.log('sca summary response:', response);
+    throw new Error(`Data from the API is misformed. See console log for more details.`);
   }
 
   return createDataFrame({
@@ -35,13 +36,21 @@ export const processScaSummary = async (
         type: FieldType.string,
         values: parseResult.data.vulnerabilities?.map((vuln) => vuln.isDirect),
       },
-      { name: 'package', type: FieldType.string, values: parseResult.data.vulnerabilities?.map((vuln) => vuln.package) },
+      {
+        name: 'package',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities?.map((vuln) => vuln.package),
+      },
       {
         name: 'packageFilePath',
         type: FieldType.string,
         values: parseResult.data.vulnerabilities?.map((vuln) => vuln.packageFilePath),
       },
-      { name: 'version', type: FieldType.string, values: parseResult.data.vulnerabilities?.map((vuln) => vuln.version) },
+      {
+        name: 'version',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities?.map((vuln) => vuln.version),
+      },
       {
         name: 'filePath',
         type: FieldType.string,

@@ -118,20 +118,20 @@ export const processSecretsEvents = async (
       sort: 'asc',
     };
 
-    console.log('secrets event request:', params);
     const response = await request_fn('secrets/events', params);
-    console.log('secrets event response:', response);
 
     const parseResult = SecretsEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
-      throw new Error(`Data from the API is misformed. Error:${parseResult.error}`);
+      console.error('Error in data from secrets event API', parseResult.error);
+      console.log('Secrets event request:', params);
+      console.log('Secrets event response:', response);
+      throw new Error(`Data from the API is misformed. See console log for more details.`);
     }
 
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    console.log('parseResult', parseResult);
-    console.log('events', events);
+    // console.log('Secrets events', events);
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
       break;

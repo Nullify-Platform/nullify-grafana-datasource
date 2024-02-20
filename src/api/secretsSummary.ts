@@ -21,14 +21,15 @@ export const processSecretsSummary = async (
     ...(queryOptions.queryParameters.type ? { type: queryOptions.queryParameters.type } : {}),
     ...(queryOptions.queryParameters.allowlisted ? { allowlisted: queryOptions.queryParameters.allowlisted } : {}),
   });
-  console.log('secrets summary response:', response);
 
   const parseResult = SecretsSummaryApiResponseSchema.safeParse(response.data);
   if (!parseResult.success) {
-    throw new Error(`Data from the API is misformed. Error:${parseResult.error}`);
+    console.error('Error in data from secrets summary API', parseResult.error);
+    console.log('secrets summary response:', response);
+    throw new Error(`Data from the API is misformed. See console log for more details.`);
   }
 
-  console.log('parseResult', parseResult);
+  // console.log('parseResult', parseResult);
 
   return createDataFrame({
     refId: queryOptions.refId,

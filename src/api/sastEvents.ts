@@ -274,20 +274,21 @@ export const processSastEvents = async (
       sort: 'asc',
     };
 
-    console.log('sast event request:', params);
     const response: any = await request_fn('sast/events', params);
-    console.log('sast event response:', response);
 
     const parseResult = SastEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
-      throw new Error(`Data from the API is misformed. Error:${parseResult.error}`);
+      console.error('Error in data from sast events API', parseResult.error);
+      console.log('sast events request:', params);
+      console.log('sast events response:', response);
+      throw new Error(`Data from the API is misformed. See console log for more details.`);
     }
 
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    console.log('parseResult', parseResult);
-    console.log('events', events);
+    // console.log('parseResult', parseResult);
+    // console.log('events', events);
 
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
