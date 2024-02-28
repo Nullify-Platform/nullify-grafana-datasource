@@ -35,10 +35,12 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
   async getRepositories() {
     const response = await this._request('admin/repositories');
     const AdminRepositoriesSchema = z.object({
-      repositories: z.array(z.object({
-        id: z.string(),
-        name: z.string(),
-      })),
+      repositories: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+        })
+      ),
     });
 
     let result = AdminRepositoriesSchema.safeParse(response.data);
@@ -115,14 +117,20 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
       processSecretsSummary(
         { refId: 'test', endpoint: 'secrets/summary', queryParameters: {} },
         this._request.bind(this)
-      ).catch((err) => ({ status: 'error', message: `Error in Secrets Summary: ${JSON.stringify(err.message ?? err)}` })),
+      ).catch((err) => ({
+        status: 'error',
+        message: `Error in Secrets Summary: ${JSON.stringify(err.message ?? err)}`,
+      })),
       processSecretsEvents(
         { refId: 'test', endpoint: 'secrets/events', queryParameters: {} },
         testTimeRange,
         this._request.bind(this)
-      ).catch((err) => ({ status: 'error', message: `Error in Secrets Events: ${JSON.stringify(err.message ?? err)}` })),
+      ).catch((err) => ({
+        status: 'error',
+        message: `Error in Secrets Events: ${JSON.stringify(err.message ?? err)}`,
+      })),
     ];
-  
+
     const results = await Promise.allSettled(promises);
     const err: string[] = [];
 
@@ -137,7 +145,7 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
         err.push(result.value.message);
       }
     });
-    
+
     if (err.length > 0) {
       console.error('Test failed', err.join('\n'));
       return {
