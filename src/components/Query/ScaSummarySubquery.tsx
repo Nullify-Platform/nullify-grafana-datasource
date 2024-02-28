@@ -1,20 +1,24 @@
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { Field, Input } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
 import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
+import { RepositoryField } from 'components/Fields/RepositoryField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
 export function ScaSummarySubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
+  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<number[]>([]);
 
-  const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onRepoIdsChange = (respositoryIds: number[]) => {
+    setSelectedRepositoryIds(respositoryIds);
     onChange({
       ...query,
       endpoint: 'sca/summary',
-      queryParameters: { ...query.queryParameters, githubRepositoryId: event.target.value },
+      queryParameters: { ...query.queryParameters, githubRepositoryIds: respositoryIds },
     });
+    onRunQuery();
   };
 
   const onPackageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -28,14 +32,13 @@ export function ScaSummarySubquery(props: Props) {
   return query.endpoint === 'sca/summary' ? (
     <>
       <Field
-        label="Repository ID Filter"
-        description="Query to filter for only the vulnerabilities from the specified GitHub repository ID. Leave blank to query for all repositories."
+        label="Repository Filter"
+        description="Query to filter for only the vulnerabilities from the specified repositories. Select one or more repositories or enter your repository ID(s) below."
       >
-        <Input
-          onChange={onRepoIdChange}
-          placeholder="1234"
-          onBlur={onRunQuery}
-          value={query.queryParameters?.githubRepositoryId || ''}
+        <RepositoryField
+          getRepositories={props.datasource.getRepositories.bind(props.datasource)}
+          selectedRepositoryIds={selectedRepositoryIds}
+          setSelectedRepositoryIds={onRepoIdsChange}
         />
       </Field>
       <Field label="Package Filter" description="Query to filter for only the specified package.">

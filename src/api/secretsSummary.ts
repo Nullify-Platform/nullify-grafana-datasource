@@ -9,24 +9,40 @@ const SecretsSummaryApiResponseSchema = z.object({
   numItems: z.number(),
 });
 
+interface SecretsSummaryApiRequest {
+  githubRepositoryIds?: string;
+  branch?: string;
+  type?: string;
+  allowlisted?: boolean;
+}
+
 export const processSecretsSummary = async (
   queryOptions: SecretsSummaryQueryOptions,
   request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
-  const response = await request_fn('secrets/summary', {
-    ...(queryOptions.queryParameters.githubRepositoryId
-      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
+  const params: SecretsSummaryApiRequest = {
+    ...(queryOptions.queryParameters.githubRepositoryIds
+      ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
       : {}),
     ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
     ...(queryOptions.queryParameters.type ? { type: queryOptions.queryParameters.type } : {}),
     ...(queryOptions.queryParameters.allowlisted ? { allowlisted: queryOptions.queryParameters.allowlisted } : {}),
-  });
+  };
+  const endpointPath = 'secrets/summary';
+  console.log(`[${endpointPath}] starting request with params:`, params);
+  const response = await request_fn(endpointPath, params);
 
   const parseResult = SecretsSummaryApiResponseSchema.safeParse(response.data);
   if (!parseResult.success) {
-    console.error('Error in data from secrets summary API', parseResult.error);
-    console.log('secrets summary response:', response);
-    throw new Error(`Data from the API is misformed. See console log for more details.`);
+    throw {
+      message: `Data from the API is misformed. Contact Nullify with the data below for help`,
+      data: {
+        endpoint: endpointPath,
+        request_params: params,
+        response: response,
+        data_validation_error: parseResult.error,
+      }
+    };
   }
 
   // console.log('parseResult', parseResult);

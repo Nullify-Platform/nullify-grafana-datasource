@@ -205,11 +205,12 @@ type ScaEventsEvent = z.infer<typeof ScaEventsEventSchema>;
 
 interface ScaEventsApiRequest {
   branch?: string;
-  githubRepositoryId?: string;
+  githubRepositoryIds?: string;
+  eventTypes?: string;
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
-  sort?: string; // asc | desc
+  sort?: "asc" | "desc";
 }
 
 export const processScaEvents = async (
@@ -220,26 +221,32 @@ export const processScaEvents = async (
   let events: ScaEventsEvent[] = [];
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
-    const params: any = {
-      ...(queryOptions.queryParameters.githubRepositoryId
-        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
+    const params: ScaEventsApiRequest = {
+      ...(queryOptions.queryParameters.githubRepositoryIds
+        ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
         : {}),
-      ...(queryOptions.queryParameters.branch ? { severity: queryOptions.queryParameters.branch } : {}),
+      ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
-
-    const response = await request_fn('sca/events', params);
+    const endpointPath = 'sca/events';
+    console.log(`[${endpointPath}] starting request with params:`, params);
+    const response = await request_fn(endpointPath, params);
 
     const parseResult = ScaEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
-      console.error('Error in data from sca events API', parseResult.error);
-      console.log('sca events request:', params);
-      console.log('sca events response:', response);
-      throw new Error(`Data from the API is misformed. See console log for more details.`);
+      throw {
+        message: `Data from the API is misformed. Contact Nullify with the data below for help`,
+        data: {
+          endpoint: endpointPath,
+          request_params: params,
+          response: response,
+          data_validation_error: parseResult.error,
+        }
+      };
     }
 
     if (parseResult.data.events) {

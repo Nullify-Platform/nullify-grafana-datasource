@@ -1,8 +1,9 @@
-import React, { ChangeEvent, FormEvent } from 'react';
-import { Checkbox, Field, Input, Select, VerticalGroup } from '@grafana/ui';
+import React, { ChangeEvent, FormEvent, useState } from 'react';
+import { Checkbox, Field, Input, VerticalGroup } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
-import { NullifyDataSourceOptions, NullifyEndpointPaths, NullifyQueryOptions } from '../../types';
+import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
+import { RepositoryField } from 'components/Fields/RepositoryField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
@@ -28,13 +29,16 @@ const SastEventTypeOptions: Array<SelectableValue<string>> = [
 
 export function SastEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
+  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<number[]>([]);
 
-  const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onRepoIdsChange = (respositoryIds: number[]) => {
+    setSelectedRepositoryIds(respositoryIds);
     onChange({
       ...query,
       endpoint: 'sast/events',
-      queryParameters: { ...query.queryParameters, githubRepositoryId: event.target.value },
+      queryParameters: { ...query.queryParameters, githubRepositoryIds: respositoryIds },
     });
+    onRunQuery();
   };
 
   const onBranchChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -49,14 +53,13 @@ export function SastEventsSubquery(props: Props) {
   return query.endpoint === 'sast/events' ? (
     <>
       <Field
-        label="Repository ID Filter"
-        description="Query to filter for only the vulnerabilities from the specified GitHub repository ID. Leave blank to query for all repositories."
+        label="Repository Filter"
+        description="Query to filter for only the vulnerabilities from the specified repositories. Select one or more repositories or enter your repository ID(s) below."
       >
-        <Input
-          onChange={onRepoIdChange}
-          placeholder="1234"
-          onBlur={onRunQuery}
-          value={query.queryParameters?.githubRepositoryId || ''}
+        <RepositoryField
+          getRepositories={props.datasource.getRepositories.bind(props.datasource)}
+          selectedRepositoryIds={selectedRepositoryIds}
+          setSelectedRepositoryIds={onRepoIdsChange}
         />
       </Field>
       <Field label="Branch Filter" description="Query to filter for only the vulnerabilities in a selected branch.">

@@ -38,7 +38,8 @@ export function QueryEditor(props: Props) {
       <Field label="Data Type" description="Category of Nullify data to query for">
         <Select
           options={endpoint_options}
-          value={query.endpoint ?? endpoint_options[0].value}
+          value={query.endpoint ?? ""}
+          placeholder='Select a data type'
           onChange={(v) => onEndpointChange(v.value ?? 'sast/summary')}
         />
       </Field>

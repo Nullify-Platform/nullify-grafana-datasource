@@ -7,6 +7,7 @@ import {
   dateTime,
 } from '@grafana/data';
 
+import { z } from 'zod';
 import _ from 'lodash';
 import { getBackendSrv, isFetchError } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
@@ -29,6 +30,24 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
     this.instanceUrl = instanceSettings.url;
     this.githubOwnerId = instanceSettings.jsonData.githubOwnerId!;
     // this.apiHostUrl = instanceSettings.jsonData.apiHostUrl;
+  }
+
+  async getRepositories() {
+    const response = await this._request('admin/repositories');
+    const AdminRepositoriesSchema = z.object({
+      repositories: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+      })),
+    });
+
+    let result = AdminRepositoriesSchema.safeParse(response.data);
+    if (!result.success) {
+      console.error('Error in data from admin repositories API', result.error);
+      console.log('admin repositories response:', response);
+      return null;
+    }
+    return result.data.repositories;
   }
 
   async query(options: DataQueryRequest<NullifyQueryOptions>): Promise<DataQueryResponse> {

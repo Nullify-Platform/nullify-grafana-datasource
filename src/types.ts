@@ -35,7 +35,7 @@ export interface SastSummaryQueryOptions extends BaseQueryOptions {
 }
 
 export interface SastSummaryQueryParameters {
-  githubRepositoryId?: string;
+  githubRepositoryIds?: number[];
   severity?: string;
 }
 
@@ -47,7 +47,7 @@ export interface SastEventsQueryOptions extends BaseQueryOptions {
 }
 
 export interface SastEventsQueryParameters {
-  githubRepositoryId?: string;
+  githubRepositoryIds?: number[];
   branch?: string;
   eventTypes?: string[];
 }
@@ -60,7 +60,7 @@ export interface ScaSummaryQueryOptions extends BaseQueryOptions {
 }
 
 export interface ScaSummaryQueryParameters {
-  githubRepositoryId?: string;
+  githubRepositoryIds?: number[];
   package?: string;
 }
 
@@ -72,7 +72,7 @@ export interface ScaEventsQueryOptions extends BaseQueryOptions {
 }
 
 export interface ScaEventsQueryParameters {
-  githubRepositoryId?: string;
+  githubRepositoryIds?: number[];
   branch?: string;
   eventTypes?: string[];
 }
@@ -85,7 +85,7 @@ export interface SecretsSummaryQueryOptions extends BaseQueryOptions {
 }
 
 export interface SecretsSummaryQueryParameters {
-  githubRepositoryId?: string;
+  githubRepositoryIds?: number[];
   branch?: string;
   type?: string;
   allowlisted?: boolean;
@@ -99,7 +99,7 @@ export interface SecretsEventsQueryOptions extends BaseQueryOptions {
 }
 
 export interface SecretsEventsQueryParameters {
-  githubRepositoryId?: string;
+  githubRepositoryIds?: number[];
   branch?: string;
   eventTypes?: string[];
 }

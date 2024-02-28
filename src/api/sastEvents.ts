@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data';
-import { FetchResponse } from '@grafana/runtime';
+import { FetchResponse, isFetchError } from '@grafana/runtime';
 import { SastEventsQueryOptions } from 'types';
 import { SastFinding } from './sastCommon';
 
@@ -254,6 +254,15 @@ const SastEventsApiResponseSchema = z.object({
 
 type SastEventsEvent = z.infer<typeof SastEventsEventSchema>;
 
+interface SastEventsApiRequest {
+  branch?: string;
+  githubRepositoryIds?: string;
+  fromTime?: string; // ISO string
+  fromEvent?: string;
+  numItems?: number; //max 100
+  sort?: "asc" | "desc";
+}
+
 export const processSastEvents = async (
   queryOptions: SastEventsQueryOptions,
   range: TimeRange,
@@ -262,26 +271,32 @@ export const processSastEvents = async (
   let events: SastEventsEvent[] = [];
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
-    const params = {
-      ...(queryOptions.queryParameters.githubRepositoryId
-        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
+    const params: SastEventsApiRequest = {
+      ...(queryOptions.queryParameters.githubRepositoryIds
+        ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
         : {}),
-      ...(queryOptions.queryParameters.branch ? { severity: queryOptions.queryParameters.branch } : {}),
+      ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
-
-    const response: any = await request_fn('sast/events', params);
+    const endpointPath = 'sast/events';
+    console.log(`[${endpointPath}] starting request with params:`, params);
+    const response: any = await request_fn(endpointPath, params);
 
     const parseResult = SastEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
-      console.error('Error in data from sast events API', parseResult.error);
-      console.log('sast events request:', params);
-      console.log('sast events response:', response);
-      throw new Error(`Data from the API is misformed. See console log for more details.`);
+      throw {
+        message: `Data from the API is misformed. Contact Nullify with the data below for help`,
+        data: {
+          endpoint: endpointPath,
+          request_params: params,
+          response: response,
+          data_validation_error: parseResult.error,
+        }
+      };
     }
 
     if (parseResult.data.events) {

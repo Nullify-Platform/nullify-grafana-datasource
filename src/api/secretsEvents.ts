@@ -91,11 +91,11 @@ type SecretsEventsEvent = z.infer<typeof SecretsEventsEventSchema>;
 
 interface SecretsEventsApiRequest {
   branch?: string;
-  githubRepositoryId?: string;
+  githubRepositoryIds?: string;
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
-  sort?: string; // asc | desc
+  sort?: "asc" | "desc";
 }
 
 export const processSecretsEvents = async (
@@ -106,9 +106,9 @@ export const processSecretsEvents = async (
   let events: SecretsEventsEvent[] = [];
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
-    const params: any = {
-      ...(queryOptions.queryParameters.githubRepositoryId
-        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
+    const params: SecretsEventsApiRequest = {
+      ...(queryOptions.queryParameters.githubRepositoryIds
+        ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
         : {}),
       ...(queryOptions.queryParameters.branch ? { severity: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
@@ -117,15 +117,21 @@ export const processSecretsEvents = async (
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
     };
-
-    const response = await request_fn('secrets/events', params);
+    const endpointPath = 'secrets/events';
+    console.log(`[${endpointPath}] starting request with params:`, params);
+    const response = await request_fn(endpointPath, params);
 
     const parseResult = SecretsEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
-      console.error('Error in data from secrets event API', parseResult.error);
-      console.log('Secrets event request:', params);
-      console.log('Secrets event response:', response);
-      throw new Error(`Data from the API is misformed. See console log for more details.`);
+      throw {
+        message: `Data from the API is misformed. Contact Nullify with the data below for help`,
+        data: {
+          endpoint: endpointPath,
+          request_params: params,
+          response: response,
+          data_validation_error: parseResult.error,
+        }
+      };
     }
 
     if (parseResult.data.events) {
