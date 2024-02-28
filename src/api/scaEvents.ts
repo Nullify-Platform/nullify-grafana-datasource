@@ -9,7 +9,7 @@ const MAX_API_REQUESTS = 10;
 const _BaseEventSchema = z.object({
   id: z.string(),
   time: z.string(),
-  timeUnix: z.number(),
+  timestampUnix: z.number(),
 });
 
 const ScaEventsGitProvider = z.object({
@@ -204,9 +204,9 @@ const ScaEventsApiResponseSchema = z.object({
 type ScaEventsEvent = z.infer<typeof ScaEventsEventSchema>;
 
 interface ScaEventsApiRequest {
+  githubRepositoryId?: number[];
   branch?: string;
-  githubRepositoryIds?: string;
-  eventTypes?: string;
+  eventType?: string[];
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
@@ -223,11 +223,11 @@ export const processScaEvents = async (
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
     const params: ScaEventsApiRequest = {
       ...(queryOptions.queryParameters.githubRepositoryIds
-        ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
+        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
-        ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
+        ? { eventType: queryOptions.queryParameters.eventTypes }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
@@ -257,7 +257,7 @@ export const processScaEvents = async (
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
       break;
-    } else if (parseResult.data.events[0].timeUnix > range.to.unix()) {
+    } else if (parseResult.data.events[0].timestampUnix > range.to.unix()) {
       // No more events required
       break;
     } else {
@@ -272,7 +272,7 @@ export const processScaEvents = async (
       {
         name: 'time',
         type: FieldType.time,
-        values: events.map((event) => new Date(event.timeUnix * 1000)),
+        values: events.map((event) => new Date(event.timestampUnix * 1000)),
       },
       { name: 'type', type: FieldType.string, values: events.map((event) => event.type) },
       {

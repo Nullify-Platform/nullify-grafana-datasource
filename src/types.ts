@@ -87,8 +87,8 @@ export interface SecretsSummaryQueryOptions extends BaseQueryOptions {
 export interface SecretsSummaryQueryParameters {
   githubRepositoryIds?: number[];
   branch?: string;
-  type?: string;
-  allowlisted?: boolean;
+  secretType?: string;
+  isAllowlisted?: boolean;
 }
 
 // SECRETS EVENTS ENDPOINT

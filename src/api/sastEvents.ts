@@ -255,8 +255,9 @@ const SastEventsApiResponseSchema = z.object({
 type SastEventsEvent = z.infer<typeof SastEventsEventSchema>;
 
 interface SastEventsApiRequest {
+  githubRepositoryId?: number[];
   branch?: string;
-  githubRepositoryIds?: string;
+  eventType?: string[];
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
@@ -273,11 +274,11 @@ export const processSastEvents = async (
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
     const params: SastEventsApiRequest = {
       ...(queryOptions.queryParameters.githubRepositoryIds
-        ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
+        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
-        ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
+        ? { eventType: queryOptions.queryParameters.eventTypes }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',

@@ -11,7 +11,7 @@ const SastSummaryApiResponseSchema = z.object({
 });
 
 interface SastSummaryApiRequest {
-  githubRepositoryIds?: string;
+  githubRepositoryId?: number[];
   severity?: string;
 }
 
@@ -21,7 +21,7 @@ export const processSastSummary = async (
 ): Promise<DataFrame> => {
   const params: SastSummaryApiRequest = {
     ...(queryOptions.queryParameters.githubRepositoryIds
-      ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
+      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
       : {}),
     ...(queryOptions.queryParameters.severity ? { severity: queryOptions.queryParameters.severity } : {}),
   };

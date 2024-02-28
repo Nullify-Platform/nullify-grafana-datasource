@@ -18,12 +18,12 @@ export function SecretsEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
   const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<number[]>([]);
 
-  const onRepoIdsChange = (respositoryIds: number[]) => {
-    setSelectedRepositoryIds(respositoryIds);
+  const onRepoIdsChange = (repositoryIds: number[]) => {
+    setSelectedRepositoryIds(repositoryIds);
     onChange({
       ...query,
       endpoint: 'secrets/events',
-      queryParameters: { ...query.queryParameters, githubRepositoryIds: respositoryIds },
+      queryParameters: { ...query.queryParameters, githubRepositoryIds: repositoryIds },
     });
     onRunQuery();
   };

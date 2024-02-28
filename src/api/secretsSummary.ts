@@ -10,10 +10,10 @@ const SecretsSummaryApiResponseSchema = z.object({
 });
 
 interface SecretsSummaryApiRequest {
-  githubRepositoryIds?: string;
+  githubRepositoryId?: number[];
   branch?: string;
-  type?: string;
-  allowlisted?: boolean;
+  secretType?: string;
+  isAllowlisted?: boolean;
 }
 
 export const processSecretsSummary = async (
@@ -22,11 +22,11 @@ export const processSecretsSummary = async (
 ): Promise<DataFrame> => {
   const params: SecretsSummaryApiRequest = {
     ...(queryOptions.queryParameters.githubRepositoryIds
-      ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
+      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
       : {}),
     ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
-    ...(queryOptions.queryParameters.type ? { type: queryOptions.queryParameters.type } : {}),
-    ...(queryOptions.queryParameters.allowlisted ? { allowlisted: queryOptions.queryParameters.allowlisted } : {}),
+    ...(queryOptions.queryParameters.secretType ? { secretType: queryOptions.queryParameters.secretType } : {}),
+    ...(queryOptions.queryParameters.isAllowlisted ? { isAllowlisted: queryOptions.queryParameters.isAllowlisted } : {}),
   };
   const endpointPath = 'secrets/summary';
   console.log(`[${endpointPath}] starting request with params:`, params);

@@ -10,7 +10,7 @@ const ScaSummaryApiResponseSchema = z.object({
 });
 
 interface ScaSummaryApiRequest {
-  githubRepositoryIds?: string;
+  githubRepositoryId?: number[];
   severity?: string;
 }
 
@@ -20,7 +20,7 @@ export const processScaSummary = async (
 ): Promise<DataFrame> => {
   const params: ScaSummaryApiRequest = {
     ...(queryOptions.queryParameters.githubRepositoryIds
-      ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
+      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
       : {}),
     ...(queryOptions.queryParameters.package ? { package: queryOptions.queryParameters.package } : {}),
   };

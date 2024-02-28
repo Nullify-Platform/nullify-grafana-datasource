@@ -29,11 +29,11 @@ export function SecretsSummarySubquery(props: Props) {
     });
   };
 
-  const onTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onSecretTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
       endpoint: 'secrets/summary',
-      queryParameters: { ...query.queryParameters, type: event.target.value },
+      queryParameters: { ...query.queryParameters, secretType: event.target.value },
     });
   };
 
@@ -41,7 +41,7 @@ export function SecretsSummarySubquery(props: Props) {
     onChange({
       ...query,
       endpoint: 'secrets/summary',
-      queryParameters: { ...query.queryParameters, allowlisted: event.target.checked },
+      queryParameters: { ...query.queryParameters, isAllowlisted: event.target.checked },
     });
   };
 
@@ -65,17 +65,17 @@ export function SecretsSummarySubquery(props: Props) {
           value={query.queryParameters?.branch || ''}
         />
       </Field>
-      <Field label="Type Filter" description="Query to filter for only the specified type.">
+      <Field label="Secret Type Filter" description="Query to filter for only the specified type.">
         <Input
-          onChange={onTypeChange}
-          placeholder="new-finding"
+          onChange={onSecretTypeChange}
+          placeholder="generic-api-key"
           onBlur={onRunQuery}
-          value={query.queryParameters?.type || ''}
+          value={query.queryParameters?.secretType || ''}
         />
       </Field>
 
       <Field label="Include allowlisted secrets?" description="Query to filter include/exclude allowlisted secrets. Default: enabled">
-        <Switch value={query.queryParameters.allowlisted ?? true} onChange={onAllowlistedChange} />
+        <Switch value={query.queryParameters.isAllowlisted ?? true} onChange={onAllowlistedChange} />
       </Field>
     </>
   ) : (

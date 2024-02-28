@@ -90,12 +90,13 @@ const SecretsEventsApiResponseSchema = z.object({
 type SecretsEventsEvent = z.infer<typeof SecretsEventsEventSchema>;
 
 interface SecretsEventsApiRequest {
+  githubRepositoryId?: number[];
   branch?: string;
-  githubRepositoryIds?: string;
+  eventType?: string[];
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
-  sort?: "asc" | "desc";
+  sort?: 'asc' | 'desc';
 }
 
 export const processSecretsEvents = async (
@@ -108,11 +109,11 @@ export const processSecretsEvents = async (
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
     const params: SecretsEventsApiRequest = {
       ...(queryOptions.queryParameters.githubRepositoryIds
-        ? { githubRepositoryIds: queryOptions.queryParameters.githubRepositoryIds.join(',') }
+        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
         : {}),
-      ...(queryOptions.queryParameters.branch ? { severity: queryOptions.queryParameters.branch } : {}),
+      ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
-        ? { eventTypes: queryOptions.queryParameters.eventTypes.join(',') }
+        ? { eventType: queryOptions.queryParameters.eventTypes }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'asc',
