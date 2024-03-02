@@ -210,7 +210,7 @@ interface ScaEventsApiRequest {
   fromTime?: string; // ISO string
   fromEvent?: string;
   numItems?: number; //max 100
-  sort?: "asc" | "desc";
+  sort?: 'asc' | 'desc';
 }
 
 export const processScaEvents = async (
@@ -245,7 +245,7 @@ export const processScaEvents = async (
           request_params: params,
           response: response,
           data_validation_error: parseResult.error,
-        }
+        },
       };
     }
 
@@ -268,13 +268,21 @@ export const processScaEvents = async (
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: events.map((event) => event.id) },
+      {
+        name: 'id',
+        type: FieldType.string,
+        values: events.map((event) => event.id),
+      },
       {
         name: 'time',
         type: FieldType.time,
         values: events.map((event) => new Date(event.timestampUnix * 1000)),
       },
-      { name: 'type', type: FieldType.string, values: events.map((event) => event.type) },
+      {
+        name: 'type',
+        type: FieldType.string,
+        values: events.map((event) => event.type),
+      },
       {
         name: 'numFindings',
         type: FieldType.number,

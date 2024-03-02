@@ -50,21 +50,41 @@ export const processSecretsSummary = async (
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.id) },
+      {
+        name: 'id',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.id),
+      },
       {
         name: 'secretType',
         type: FieldType.string,
         values: parseResult.data.secrets?.map((secret) => secret.secretType),
       },
-      { name: 'filePath', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.filePath) },
-      { name: 'author', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.author) },
+      {
+        name: 'filePath',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.filePath),
+      },
+      {
+        name: 'author',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.author),
+      },
       {
         name: 'timeStamp',
         type: FieldType.time,
         values: parseResult.data.secrets?.map((secret) => new Date(secret.timeStamp)),
       },
-      { name: 'ruleId', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.ruleId) },
-      { name: 'entropy', type: FieldType.number, values: parseResult.data.secrets?.map((secret) => secret.entropy) },
+      {
+        name: 'ruleId',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.ruleId),
+      },
+      {
+        name: 'entropy',
+        type: FieldType.number,
+        values: parseResult.data.secrets?.map((secret) => secret.entropy),
+      },
       {
         name: 'isBranchHead',
         type: FieldType.boolean,

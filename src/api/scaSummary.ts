@@ -37,14 +37,18 @@ export const processScaSummary = async (
         request_params: params,
         response: response,
         data_validation_error: parseResult.error,
-      }
+      },
     };
   }
 
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: parseResult.data.vulnerabilities?.map((vuln) => vuln.id) },
+      {
+        name: 'id',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities?.map((vuln) => vuln.id),
+      },
       {
         name: 'isDirect',
         type: FieldType.string,

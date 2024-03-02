@@ -38,14 +38,18 @@ export const processSastSummary = async (
         request_params: params,
         response: response,
         data_validation_error: parseResult.error,
-      }
+      },
     };
   }
 
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: parseResult.data.vulnerabilities.map((vuln) => vuln.id) },
+      {
+        name: 'id',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.id),
+      },
       {
         name: 'formatted_severity',
         type: FieldType.string,
@@ -56,7 +60,11 @@ export const processSastSummary = async (
         type: FieldType.string,
         values: parseResult.data.vulnerabilities.map((vuln) => vuln.severity),
       },
-      { name: 'cwe', type: FieldType.number, values: parseResult.data.vulnerabilities.map((vuln) => vuln.cwe) },
+      {
+        name: 'cwe',
+        type: FieldType.number,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.cwe),
+      },
       {
         name: 'language',
         type: FieldType.string,
