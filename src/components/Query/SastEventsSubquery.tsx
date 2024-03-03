@@ -2,30 +2,14 @@ import React, { ChangeEvent, FormEvent, useState } from 'react';
 import { Checkbox, Field, Input, VerticalGroup } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
-import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
+import { NullifyDataSourceOptions, NullifyQueryOptions, SastEventTypeDescriptions } from '../../types';
 import { RepositoryField } from 'components/Fields/RepositoryField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
-const SastEventTypeOptions: Array<SelectableValue<string>> = [
-  { value: 'new-branch-summary', label: 'New Branch Summary' },
-  { value: 'new-finding', label: 'New Finding' },
-  { value: 'new-findings', label: 'New Findings' },
-  { value: 'new-fix', label: 'New Fix' },
-  { value: 'new-fixes', label: 'New Fixes' },
-  { value: 'new-allowlisted-finding', label: 'New Allowlisted Finding' },
-  { value: 'new-allowlisted-findings', label: 'New Allowlisted Findings' },
-  { value: 'new-unallowlisted-finding', label: 'New Unallowlisted Finding' },
-  { value: 'new-unallowlisted-findings', label: 'New Unallowlisted Findings' },
-  { value: 'new-pull-request-finding', label: 'New Pull Request Finding' },
-  { value: 'new-pull-request-findings', label: 'New Pull Request Findings' },
-  { value: 'new-pull-request-fix', label: 'New Pull Request Fix' },
-  { value: 'new-pull-request-fixes', label: 'New Pull Request Fixes' },
-  { value: 'new-pull-request-allowlisted-finding', label: 'New Pull Request Allowlisted Finding' },
-  { value: 'new-pull-request-allowlisted-findings', label: 'New Pull Request Allowlisted Findings' },
-  { value: 'new-pull-request-unallowlisted-finding', label: 'New Pull Request Unallowlisted Finding' },
-  { value: 'new-pull-request-unallowlisted-findings', label: 'New Pull Request Unallowlisted Findings' },
-];
+const SastEventTypeOptions: Array<SelectableValue<string>> = Object.entries(SastEventTypeDescriptions).map(
+  ([value, label]) => ({ value, label })
+);
 
 export function SastEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;

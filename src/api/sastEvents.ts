@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data';
 import { FetchResponse, isFetchError } from '@grafana/runtime';
-import { SastEventsQueryOptions } from 'types';
+import { SastEventType, SastEventsQueryOptions } from 'types';
 import { SastFinding } from './sastCommon';
 import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
@@ -29,9 +29,9 @@ const SastEventsGitProvider = z.object({
   bitbucket: z.any().optional(),
 });
 
-const SastEventsEventSchema = z.union([
-  _BaseEventSchema.extend({
-    type: z.literal('new-branch-summary'),
+const sastEventSchemaMap = {
+  [SastEventType.NewBranchSummary]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewBranchSummary),
     data: z.object({
       id: z.string(),
       provider: SastEventsGitProvider,
@@ -45,8 +45,8 @@ const SastEventsEventSchema = z.union([
       numUnknown: z.number(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-finding'),
+  [SastEventType.NewFinding]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -57,8 +57,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-findings'),
+  [SastEventType.NewFindings]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -70,8 +70,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-fix'),
+  [SastEventType.NewFix]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewFix),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -82,8 +82,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-fixes'),
+  [SastEventType.NewFixes]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewFixes),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -95,8 +95,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-allowlisted-finding'),
+  [SastEventType.NewAllowlistedFinding]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewAllowlistedFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -107,8 +107,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-allowlisted-findings'),
+  [SastEventType.NewAllowlistedFindings]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewAllowlistedFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -120,8 +120,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-unallowlisted-finding'),
+  [SastEventType.NewUnallowlistedFinding]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewUnallowlistedFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -132,8 +132,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-unallowlisted-findings'),
+  [SastEventType.NewUnallowlistedFindings]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewUnallowlistedFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -145,8 +145,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-finding'),
+  [SastEventType.NewPullRequestFinding]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestFinding),
     data: z.object({
       id: z.string(),
       provider: SastEventsGitProvider,
@@ -158,8 +158,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-findings'),
+  [SastEventType.NewPullRequestFindings]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestFindings),
     data: z.object({
       id: z.string(),
       provider: SastEventsGitProvider,
@@ -171,8 +171,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-fix'),
+  [SastEventType.NewPullRequestFix]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestFix),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -183,8 +183,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-fixes'),
+  [SastEventType.NewPullRequestFixes]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestFixes),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -195,8 +195,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-allowlisted-finding'),
+  [SastEventType.NewPullRequestAllowlistedFinding]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestAllowlistedFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -207,8 +207,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-allowlisted-findings'),
+  [SastEventType.NewPullRequestAllowlistedFindings]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestAllowlistedFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -220,8 +220,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-unallowlisted-finding'),
+  [SastEventType.NewPullRequestUnallowlistedFinding]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestUnallowlistedFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -232,8 +232,8 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-unallowlisted-findings'),
+  [SastEventType.NewPullRequestUnallowlistedFindings]: _BaseEventSchema.extend({
+    type: z.literal(SastEventType.NewPullRequestUnallowlistedFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -245,10 +245,12 @@ const SastEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-]);
+};
+
+const SastEventsEventSchema = z.union([z.never(), z.never(), ...Object.values(sastEventSchemaMap)]);
 
 const SastEventsApiResponseSchema = z.object({
-  events: z.array(SastEventsEventSchema).nullable().nullable(),
+  events: z.array(SastEventsEventSchema).nullable(),
   numItems: z.number(),
   nextEventId: z.string(),
 });
@@ -284,7 +286,7 @@ export const processSastEvents = async (
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventType: queryOptions.queryParameters.eventTypes }
-        : {}),
+        : { eventType: Object.values(SastEventType) }),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'desc',
     };
@@ -341,32 +343,40 @@ export const processSastEvents = async (
       {
         name: 'numFindings',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numFindings : undefined)),
+        values: events.map((event) =>
+          event.type === SastEventType.NewBranchSummary ? event.data.numFindings : undefined
+        ),
       },
       {
         name: 'numCritical',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numCritical : undefined)),
+        values: events.map((event) =>
+          event.type === SastEventType.NewBranchSummary ? event.data.numCritical : undefined
+        ),
       },
       {
         name: 'numHigh',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numHigh : undefined)),
+        values: events.map((event) => (event.type === SastEventType.NewBranchSummary ? event.data.numHigh : undefined)),
       },
       {
         name: 'numMedium',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numMedium : undefined)),
+        values: events.map((event) =>
+          event.type === SastEventType.NewBranchSummary ? event.data.numMedium : undefined
+        ),
       },
       {
         name: 'numLow',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numLow : undefined)),
+        values: events.map((event) => (event.type === SastEventType.NewBranchSummary ? event.data.numLow : undefined)),
       },
       {
         name: 'numUnknown',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numUnknown : undefined)),
+        values: events.map((event) =>
+          event.type === SastEventType.NewBranchSummary ? event.data.numUnknown : undefined
+        ),
       },
       {
         name: 'repositoryId',

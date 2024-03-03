@@ -2,17 +2,14 @@ import React, { ChangeEvent, FormEvent, useState } from 'react';
 import { Checkbox, Field, Input, VerticalGroup } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
-import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
+import { NullifyDataSourceOptions, NullifyQueryOptions, SecretsEventTypeDescriptions } from '../../types';
 import { RepositoryField } from 'components/Fields/RepositoryField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
-const SecretsEventTypeOptions: Array<SelectableValue<string>> = [
-  { value: 'new-finding', label: 'New Finding' },
-  { value: 'new-findings', label: 'New Findings' },
-  { value: 'new-allowlisted-finding', label: 'New Allowlisted Finding' },
-  { value: 'new-allowlisted-findings', label: 'New Allowlisted Findings' },
-];
+const SecretsEventTypeOptions: Array<SelectableValue<string>> = Object.entries(SecretsEventTypeDescriptions).map(
+  ([value, label]) => ({ value, label })
+);
 
 export function SecretsEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
