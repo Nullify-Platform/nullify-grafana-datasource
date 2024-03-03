@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
-import { ScaEventsQueryOptions } from 'types';
+import { ScaEventType, ScaEventsQueryOptions } from 'types';
 import { ScaEventsDependencyFinding } from './scaCommon';
 import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
@@ -29,9 +29,9 @@ const ScaEventsGitProvider = z.object({
   bitbucket: z.any().optional(),
 });
 
-const ScaEventsEventSchema = z.union([
-  _BaseEventSchema.extend({
-    type: z.literal('new-branch-summary'),
+const scaEventSchemaMap = {
+  [ScaEventType.NewBranchSummary]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewBranchSummary),
     data: z.object({
       id: z.string(),
       provider: ScaEventsGitProvider,
@@ -46,8 +46,8 @@ const ScaEventsEventSchema = z.union([
       numUnknown: z.number(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-finding'),
+  [ScaEventType.NewFinding]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -58,8 +58,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-findings'),
+  [ScaEventType.NewFindings]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -71,8 +71,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-allowlisted-finding'),
+  [ScaEventType.NewAllowlistedFinding]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewAllowlistedFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -83,8 +83,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-allowlisted-findings'),
+  [ScaEventType.NewAllowlistedFindings]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewAllowlistedFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -96,8 +96,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-fix'),
+  [ScaEventType.NewFix]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewFix),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -108,8 +108,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-fixes'),
+  [ScaEventType.NewFixes]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewFixes),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -121,8 +121,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-finding'),
+  [ScaEventType.NewPullRequestFinding]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewPullRequestFinding),
     data: z.object({
       id: z.string(),
       provider: ScaEventsGitProvider,
@@ -134,8 +134,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-findings'),
+  [ScaEventType.NewPullRequestFindings]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewPullRequestFindings),
     data: z.object({
       id: z.string(),
       provider: ScaEventsGitProvider,
@@ -147,8 +147,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-fix'),
+  [ScaEventType.NewPullRequestFix]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewPullRequestFix),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -159,8 +159,8 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-pull-request-fixes'),
+  [ScaEventType.NewPullRequestFixes]: _BaseEventSchema.extend({
+    type: z.literal(ScaEventType.NewPullRequestFixes),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -171,7 +171,7 @@ const ScaEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
+  [ScaEventType.BotInteractionPR]: _BaseEventSchema.extend({
     type: z.literal('bot-interaction'), // bot interaction pr
     data: z.object({
       id: z.string(),
@@ -182,7 +182,7 @@ const ScaEventsEventSchema = z.union([
       botRequest: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
+  [ScaEventType.BotInteractionIssue]: _BaseEventSchema.extend({
     type: z.literal('bot-interaction'), // bot interaction issue
     data: z.object({
       id: z.string(),
@@ -194,10 +194,12 @@ const ScaEventsEventSchema = z.union([
       botRequest: z.string(),
     }),
   }),
-]);
+};
+
+const ScaEventsEventSchema = z.union([z.never(), z.never(), ...Object.values(scaEventSchemaMap)]);
 
 const ScaEventsApiResponseSchema = z.object({
-  events: z.array(ScaEventsEventSchema).nullable().nullable(),
+  events: z.array(ScaEventsEventSchema).nullable(),
   numItems: z.number(),
   nextEventId: z.string(),
 });
@@ -233,7 +235,7 @@ export const processScaEvents = async (
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventType: queryOptions.queryParameters.eventTypes }
-        : {}),
+        : { eventType: Object.values(ScaEventType) }),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'desc',
     };
@@ -289,32 +291,40 @@ export const processScaEvents = async (
       {
         name: 'numFindings',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numFindings : undefined)),
+        values: events.map((event) =>
+          event.type === ScaEventType.NewBranchSummary ? event.data.numFindings : undefined
+        ),
       },
       {
         name: 'numCritical',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numCritical : undefined)),
+        values: events.map((event) =>
+          event.type === ScaEventType.NewBranchSummary ? event.data.numCritical : undefined
+        ),
       },
       {
         name: 'numHigh',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numHigh : undefined)),
+        values: events.map((event) => (event.type === ScaEventType.NewBranchSummary ? event.data.numHigh : undefined)),
       },
       {
         name: 'numMedium',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numMedium : undefined)),
+        values: events.map((event) =>
+          event.type === ScaEventType.NewBranchSummary ? event.data.numMedium : undefined
+        ),
       },
       {
         name: 'numLow',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numLow : undefined)),
+        values: events.map((event) => (event.type === ScaEventType.NewBranchSummary ? event.data.numLow : undefined)),
       },
       {
         name: 'numUnknown',
         type: FieldType.number,
-        values: events.map((event) => (event.type === 'new-branch-summary' ? event.data.numUnknown : undefined)),
+        values: events.map((event) =>
+          event.type === ScaEventType.NewBranchSummary ? event.data.numUnknown : undefined
+        ),
       },
       {
         name: 'repositoryId',

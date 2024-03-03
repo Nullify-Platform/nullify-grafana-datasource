@@ -60,6 +60,46 @@ export interface SastEventsQueryParameters {
   eventTypes?: string[];
 }
 
+export enum SastEventType {
+  NewBranchSummary = 'new-branch-summary',
+  NewFinding = 'new-finding',
+  NewFindings = 'new-findings',
+  NewFix = 'new-fix',
+  NewFixes = 'new-fixes',
+  NewAllowlistedFinding = 'new-allowlisted-finding',
+  NewAllowlistedFindings = 'new-allowlisted-findings',
+  NewUnallowlistedFinding = 'new-unallowlisted-finding',
+  NewUnallowlistedFindings = 'new-unallowlisted-findings',
+  NewPullRequestFinding = 'new-pull-request-finding',
+  NewPullRequestFindings = 'new-pull-request-findings',
+  NewPullRequestFix = 'new-pull-request-fix',
+  NewPullRequestFixes = 'new-pull-request-fixes',
+  NewPullRequestAllowlistedFinding = 'new-pull-request-allowlisted-finding',
+  NewPullRequestAllowlistedFindings = 'new-pull-request-allowlisted-findings',
+  NewPullRequestUnallowlistedFinding = 'new-pull-request-unallowlisted-finding',
+  NewPullRequestUnallowlistedFindings = 'new-pull-request-unallowlisted-findings',
+}
+
+export const SastEventTypeDescriptions: Record<SastEventType, string> = {
+  [SastEventType.NewBranchSummary]: 'New Branch Summary',
+  [SastEventType.NewFinding]: 'New Finding',
+  [SastEventType.NewFindings]: 'New Findings',
+  [SastEventType.NewFix]: 'New Fix',
+  [SastEventType.NewFixes]: 'New Fixes',
+  [SastEventType.NewAllowlistedFinding]: 'New Allowlisted Finding',
+  [SastEventType.NewAllowlistedFindings]: 'New Allowlisted Findings',
+  [SastEventType.NewUnallowlistedFinding]: 'New Unallowlisted Finding',
+  [SastEventType.NewUnallowlistedFindings]: 'New Unallowlisted Findings',
+  [SastEventType.NewPullRequestFinding]: 'New Pull Request Finding',
+  [SastEventType.NewPullRequestFindings]: 'New Pull Request Findings',
+  [SastEventType.NewPullRequestFix]: 'New Pull Request Fix',
+  [SastEventType.NewPullRequestFixes]: 'New Pull Request Fixes',
+  [SastEventType.NewPullRequestAllowlistedFinding]: 'New Pull Request Allowlisted Finding',
+  [SastEventType.NewPullRequestAllowlistedFindings]: 'New Pull Request Allowlisted Findings',
+  [SastEventType.NewPullRequestUnallowlistedFinding]: 'New Pull Request Unallowlisted Finding',
+  [SastEventType.NewPullRequestUnallowlistedFindings]: 'New Pull Request Unallowlisted Findings',
+};
+
 // SCA SUMMARY ENDPOINT
 
 export interface ScaSummaryQueryOptions extends BaseQueryOptions {
@@ -84,6 +124,38 @@ export interface ScaEventsQueryParameters {
   branch?: string;
   eventTypes?: string[];
 }
+
+export enum ScaEventType {
+  NewBranchSummary = 'new-branch-summary',
+  NewFinding = 'new-finding',
+  NewFindings = 'new-findings',
+  NewAllowlistedFinding = 'new-allowlisted-finding',
+  NewAllowlistedFindings = 'new-allowlisted-findings',
+  NewFix = 'new-fix',
+  NewFixes = 'new-fixes',
+  NewPullRequestFinding = 'new-pull-request-finding',
+  NewPullRequestFindings = 'new-pull-request-findings',
+  NewPullRequestFix = 'new-pull-request-fix',
+  NewPullRequestFixes = 'new-pull-request-fixes',
+  BotInteractionPR = 'bot-interaction-pr',
+  BotInteractionIssue = 'bot-interaction-issue',
+}
+
+export const ScaEventTypeDescriptions: Record<ScaEventType, string> = {
+  [ScaEventType.NewBranchSummary]: 'New Branch Summary',
+  [ScaEventType.NewFinding]: 'New Finding',
+  [ScaEventType.NewFindings]: 'New Findings',
+  [ScaEventType.NewAllowlistedFinding]: 'New Allowlisted Finding',
+  [ScaEventType.NewAllowlistedFindings]: 'New Allowlisted Findings',
+  [ScaEventType.NewFix]: 'New Fix',
+  [ScaEventType.NewFixes]: 'New Fixes',
+  [ScaEventType.NewPullRequestFinding]: 'New Pull Request Finding',
+  [ScaEventType.NewPullRequestFindings]: 'New Pull Request Findings',
+  [ScaEventType.NewPullRequestFix]: 'New Pull Request Fix',
+  [ScaEventType.NewPullRequestFixes]: 'New Pull Request Fixes',
+  [ScaEventType.BotInteractionPR]: 'Bot Interaction PR',
+  [ScaEventType.BotInteractionIssue]: 'Bot Interaction Issue',
+};
 
 // SECRETS SUMMARY ENDPOINT
 
@@ -111,6 +183,20 @@ export interface SecretsEventsQueryParameters {
   branch?: string;
   eventTypes?: string[];
 }
+
+export enum SecretsEventType {
+  NewFinding = 'new-finding',
+  NewFindings = 'new-findings',
+  NewAllowlistedFinding = 'new-allowlisted-finding',
+  NewAllowlistedFindings = 'new-allowlisted-findings',
+}
+
+export const SecretsEventTypeDescriptions: Record<SecretsEventType, string> = {
+  [ScaEventType.NewFinding]: 'New Finding',
+  [ScaEventType.NewFindings]: 'New Findings',
+  [ScaEventType.NewAllowlistedFinding]: 'New Allowlisted Finding',
+  [ScaEventType.NewAllowlistedFindings]: 'New Allowlisted Findings',
+};
 
 export type NullifyQueryOptions =
   | SastSummaryQueryOptions

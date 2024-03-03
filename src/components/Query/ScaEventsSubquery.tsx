@@ -1,25 +1,15 @@
 import React, { ChangeEvent, FormEvent, useState } from 'react';
-import { Checkbox, Field, Input, Select, VerticalGroup } from '@grafana/ui';
+import { Checkbox, Field, Input, VerticalGroup } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
-import { NullifyDataSourceOptions, NullifyEndpointPaths, NullifyQueryOptions } from '../../types';
+import { NullifyDataSourceOptions, NullifyQueryOptions, ScaEventTypeDescriptions } from '../../types';
 import { RepositoryField } from 'components/Fields/RepositoryField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
-const ScaEventTypeOptions: Array<SelectableValue<string>> = [
-  { value: 'new-branch-summary', label: 'New Branch Summary' },
-  { value: 'new-finding', label: 'New Finding' },
-  { value: 'new-findings', label: 'New Findings' },
-  { value: 'new-fix', label: 'New Fix' },
-  { value: 'new-fixes', label: 'New Fixes' },
-  { value: 'new-allowlisted-finding', label: 'New Allowlisted Finding' },
-  { value: 'new-allowlisted-findings', label: 'New Allowlisted Findings' },
-  { value: 'new-pull-request-finding', label: 'New Pull Request Finding' },
-  { value: 'new-pull-request-findings', label: 'New Pull Request Findings' },
-  { value: 'new-pull-request-fix', label: 'New Pull Request Fix' },
-  { value: 'new-pull-request-fixes', label: 'New Pull Request Fixes' },
-];
+const ScaEventTypeOptions: Array<SelectableValue<string>> = Object.entries(ScaEventTypeDescriptions).map(
+  ([value, label]) => ({ value, label })
+);
 
 export function ScaEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;

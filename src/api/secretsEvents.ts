@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
-import { SecretsEventsQueryOptions } from 'types';
+import { SecretsEventType, SecretsEventsQueryOptions } from 'types';
 import { SecretsScannerFindingEvent } from './secretsCommon';
 import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
@@ -29,9 +29,9 @@ const SecretsEventsGitProvider = z.object({
   bitbucket: z.any().optional(),
 });
 
-const SecretsEventsEventSchema = z.union([
-  _BaseEventSchema.extend({
-    type: z.literal('new-finding'),
+const secretsEventSchemaMap = {
+  [SecretsEventType.NewFinding]: _BaseEventSchema.extend({
+    type: z.literal(SecretsEventType.NewFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -42,8 +42,8 @@ const SecretsEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-findings'),
+  [SecretsEventType.NewFindings]: _BaseEventSchema.extend({
+    type: z.literal(SecretsEventType.NewFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -55,8 +55,8 @@ const SecretsEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-allowlisted-finding'),
+  [SecretsEventType.NewAllowlistedFinding]: _BaseEventSchema.extend({
+    type: z.literal(SecretsEventType.NewAllowlistedFinding),
     data: z.object({
       id: z.string(),
       branch: z.string(),
@@ -67,8 +67,8 @@ const SecretsEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-  _BaseEventSchema.extend({
-    type: z.literal('new-allowlisted-findings'),
+  [SecretsEventType.NewAllowlistedFindings]: _BaseEventSchema.extend({
+    type: z.literal(SecretsEventType.NewAllowlistedFindings),
     data: z.object({
       id: z.string(),
       part: z.number().optional(),
@@ -80,10 +80,12 @@ const SecretsEventsEventSchema = z.union([
       userId: z.string(),
     }),
   }),
-]);
+};
+
+const SecretsEventsEventSchema = z.union([z.never(), z.never(), ...Object.values(secretsEventSchemaMap)]);
 
 const SecretsEventsApiResponseSchema = z.object({
-  events: z.array(SecretsEventsEventSchema).nullable().nullable(),
+  events: z.array(SecretsEventsEventSchema).nullable(),
   numItems: z.number(),
   nextEventId: z.string(),
 });
@@ -119,7 +121,7 @@ export const processSecretsEvents = async (
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventType: queryOptions.queryParameters.eventTypes }
-        : {}),
+        : { eventType: Object.values(SecretsEventType) }),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
       sort: 'desc',
     };
@@ -157,7 +159,7 @@ export const processSecretsEvents = async (
   }
 
   const getFindings = (event: SecretsEventsEvent) =>
-    event.type === 'new-finding' || event.type === 'new-allowlisted-finding'
+    event.type === SecretsEventType.NewFinding || event.type === SecretsEventType.NewAllowlistedFinding
       ? [event.data.finding]
       : event.data.findings ?? [];
 
