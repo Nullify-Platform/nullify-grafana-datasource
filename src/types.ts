@@ -16,6 +16,14 @@ export interface NullifySecureJsonData {
   apiKey?: string;
 }
 
+export enum VariableQueryType {
+  Repository = 'Repository',
+}
+
+export interface NullifyVariableQuery {
+  queryType: VariableQueryType;
+}
+
 export type NullifyEndpointPaths =
   | 'sast/summary'
   | 'sast/events'
@@ -35,7 +43,7 @@ export interface SastSummaryQueryOptions extends BaseQueryOptions {
 }
 
 export interface SastSummaryQueryParameters {
-  githubRepositoryIds?: number[];
+  githubRepositoryIdsOrQueries?: Array<number | string>;
   severity?: string;
 }
 
@@ -47,7 +55,7 @@ export interface SastEventsQueryOptions extends BaseQueryOptions {
 }
 
 export interface SastEventsQueryParameters {
-  githubRepositoryIds?: number[];
+  githubRepositoryIdsOrQueries?: Array<number | string>;
   branch?: string;
   eventTypes?: string[];
 }
@@ -60,7 +68,7 @@ export interface ScaSummaryQueryOptions extends BaseQueryOptions {
 }
 
 export interface ScaSummaryQueryParameters {
-  githubRepositoryIds?: number[];
+  githubRepositoryIdsOrQueries?: Array<number | string>;
   package?: string;
 }
 
@@ -72,7 +80,7 @@ export interface ScaEventsQueryOptions extends BaseQueryOptions {
 }
 
 export interface ScaEventsQueryParameters {
-  githubRepositoryIds?: number[];
+  githubRepositoryIdsOrQueries?: Array<number | string>;
   branch?: string;
   eventTypes?: string[];
 }
@@ -85,7 +93,7 @@ export interface SecretsSummaryQueryOptions extends BaseQueryOptions {
 }
 
 export interface SecretsSummaryQueryParameters {
-  githubRepositoryIds?: number[];
+  githubRepositoryIdsOrQueries?: Array<number | string>;
   branch?: string;
   secretType?: string;
   isAllowlisted?: boolean;
@@ -99,7 +107,7 @@ export interface SecretsEventsQueryOptions extends BaseQueryOptions {
 }
 
 export interface SecretsEventsQueryParameters {
-  githubRepositoryIds?: number[];
+  githubRepositoryIdsOrQueries?: Array<number | string>;
   branch?: string;
   eventTypes?: string[];
 }

@@ -16,14 +16,14 @@ const SecretsEventTypeOptions: Array<SelectableValue<string>> = [
 
 export function SecretsEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<number[]>([]);
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
 
-  const onRepoIdsChange = (repositoryIds: number[]) => {
-    setSelectedRepositoryIds(repositoryIds);
+  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+    setSelectedRepositories(repositories);
     onChange({
       ...query,
       endpoint: 'secrets/events',
-      queryParameters: { ...query.queryParameters, githubRepositoryIds: repositoryIds },
+      queryParameters: { ...query.queryParameters, githubRepositoryIdsOrQueries: repositories },
     });
     onRunQuery();
   };
@@ -45,8 +45,8 @@ export function SecretsEventsSubquery(props: Props) {
       >
         <RepositoryField
           getRepositories={props.datasource.getRepositories.bind(props.datasource)}
-          selectedRepositoryIds={selectedRepositoryIds}
-          setSelectedRepositoryIds={onRepoIdsChange}
+          selectedRepositoryIdsOrQueries={selectedRepositories}
+          setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
         />
       </Field>
       <Field label="Branch Filter" description="Query to filter for only the secrets in a selected branch.">

@@ -3,6 +3,7 @@ import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
 import { ScaSummaryQueryOptions } from 'types';
 import { ScaEventsDependencyFinding } from './scaCommon';
+import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const ScaSummaryApiResponseSchema = z.object({
   vulnerabilities: z.array(ScaEventsDependencyFinding).nullable(),
@@ -19,8 +20,12 @@ export const processScaSummary = async (
   request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
   const params: ScaSummaryApiRequest = {
-    ...(queryOptions.queryParameters.githubRepositoryIds
-      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
+    ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+      ? {
+          githubRepositoryId: unwrapRepositoryTemplateVariables(
+            queryOptions.queryParameters.githubRepositoryIdsOrQueries
+          ),
+        }
       : {}),
     ...(queryOptions.queryParameters.package ? { package: queryOptions.queryParameters.package } : {}),
   };

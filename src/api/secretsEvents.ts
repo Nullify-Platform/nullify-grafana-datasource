@@ -3,6 +3,7 @@ import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data'
 import { FetchResponse } from '@grafana/runtime';
 import { SecretsEventsQueryOptions } from 'types';
 import { SecretsScannerFindingEvent } from './secretsCommon';
+import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const MAX_API_REQUESTS = 10;
 
@@ -108,19 +109,25 @@ export const processSecretsEvents = async (
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
     const params: SecretsEventsApiRequest = {
-      ...(queryOptions.queryParameters.githubRepositoryIds
-        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
+      ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+        ? {
+            githubRepositoryId: unwrapRepositoryTemplateVariables(
+              queryOptions.queryParameters.githubRepositoryIdsOrQueries
+            ),
+          }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventType: queryOptions.queryParameters.eventTypes }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
-      sort: 'asc',
+      sort: 'desc',
     };
     const endpointPath = 'secrets/events';
     console.log(`[${endpointPath}] starting request with params:`, params);
     const response = await request_fn(endpointPath, params);
+
+    console.log(`[${endpointPath}] response:`, response);
 
     const parseResult = SecretsEventsApiResponseSchema.safeParse(response.data);
     if (!parseResult.success) {
@@ -138,7 +145,6 @@ export const processSecretsEvents = async (
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    // console.log('Secrets events', events);
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
       break;

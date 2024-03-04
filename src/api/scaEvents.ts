@@ -3,6 +3,7 @@ import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data'
 import { FetchResponse } from '@grafana/runtime';
 import { ScaEventsQueryOptions } from 'types';
 import { ScaEventsDependencyFinding } from './scaCommon';
+import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const MAX_API_REQUESTS = 10;
 
@@ -222,15 +223,19 @@ export const processScaEvents = async (
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
     const params: ScaEventsApiRequest = {
-      ...(queryOptions.queryParameters.githubRepositoryIds
-        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
+      ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+        ? {
+            githubRepositoryId: unwrapRepositoryTemplateVariables(
+              queryOptions.queryParameters.githubRepositoryIdsOrQueries
+            ),
+          }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventType: queryOptions.queryParameters.eventTypes }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
-      sort: 'asc',
+      sort: 'desc',
     };
     const endpointPath = 'sca/events';
     console.log(`[${endpointPath}] starting request with params:`, params);
@@ -252,8 +257,6 @@ export const processScaEvents = async (
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    // console.log('parseResult', parseResult);
-    // console.log('events', events);
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events
       break;

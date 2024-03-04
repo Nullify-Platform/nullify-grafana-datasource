@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
-import { FetchResponse } from '@grafana/runtime';
+import { FetchResponse, getTemplateSrv } from '@grafana/runtime';
 import { SecretsSummaryQueryOptions } from 'types';
 import { SecretsScannerFindingEvent } from './secretsCommon';
+import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const SecretsSummaryApiResponseSchema = z.object({
   secrets: z.array(SecretsScannerFindingEvent).nullable(),
@@ -21,12 +22,18 @@ export const processSecretsSummary = async (
   request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
   const params: SecretsSummaryApiRequest = {
-    ...(queryOptions.queryParameters.githubRepositoryIds
-      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
+    ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+      ? {
+          githubRepositoryId: unwrapRepositoryTemplateVariables(
+            queryOptions.queryParameters.githubRepositoryIdsOrQueries
+          ),
+        }
       : {}),
     ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
     ...(queryOptions.queryParameters.secretType ? { secretType: queryOptions.queryParameters.secretType } : {}),
-    ...(queryOptions.queryParameters.isAllowlisted ? { isAllowlisted: queryOptions.queryParameters.isAllowlisted } : {}),
+    ...(queryOptions.queryParameters.isAllowlisted
+      ? { isAllowlisted: queryOptions.queryParameters.isAllowlisted }
+      : {}),
   };
   const endpointPath = 'secrets/summary';
   console.log(`[${endpointPath}] starting request with params:`, params);
@@ -41,11 +48,9 @@ export const processSecretsSummary = async (
         request_params: params,
         response: response,
         data_validation_error: parseResult.error,
-      }
+      },
     };
   }
-
-  // console.log('parseResult', parseResult);
 
   return createDataFrame({
     refId: queryOptions.refId,

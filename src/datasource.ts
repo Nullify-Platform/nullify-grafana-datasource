@@ -9,10 +9,10 @@ import {
 
 import { z } from 'zod';
 import _ from 'lodash';
-import { getBackendSrv, isFetchError } from '@grafana/runtime';
+import { getBackendSrv, getTemplateSrv, isFetchError } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
-import { NullifyDataSourceOptions, NullifyQueryOptions } from './types';
+import { NullifyVariableQuery, NullifyDataSourceOptions, NullifyQueryOptions } from './types';
 import { processSastSummary } from 'api/sastSummary';
 import { processSastEvents } from 'api/sastEvents';
 import { processScaSummary } from 'api/scaSummary';
@@ -30,6 +30,11 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
     this.instanceUrl = instanceSettings.url;
     this.githubOwnerId = instanceSettings.jsonData.githubOwnerId!;
     // this.apiHostUrl = instanceSettings.jsonData.apiHostUrl;
+  }
+
+  async metricFindQuery(query: NullifyVariableQuery, options?: any) {
+    const repos = await this.getRepositories();
+    return repos?.map(repo => ({text: repo.name, value: repo.id})) || [];
   }
 
   async getRepositories() {
@@ -80,9 +85,11 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
         githubOwnerId: this.githubOwnerId,
         ...params,
       },
+      retry: 3,
     });
+    const output = await lastValueFrom(response);
 
-    return await lastValueFrom(response);
+    return output;
   }
 
   /**

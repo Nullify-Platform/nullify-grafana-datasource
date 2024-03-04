@@ -9,14 +9,14 @@ type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDat
 
 export function SecretsSummarySubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<number[]>([]);
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
 
-  const onRepoIdsChange = (respositoryIds: number[]) => {
-    setSelectedRepositoryIds(respositoryIds);
+  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+    setSelectedRepositories(repositories);
     onChange({
       ...query,
       endpoint: 'secrets/summary',
-      queryParameters: { ...query.queryParameters, githubRepositoryIds: respositoryIds },
+      queryParameters: { ...query.queryParameters, githubRepositoryIdsOrQueries: repositories },
     });
     onRunQuery();
   };
@@ -53,8 +53,8 @@ export function SecretsSummarySubquery(props: Props) {
       >
         <RepositoryField
           getRepositories={props.datasource.getRepositories.bind(props.datasource)}
-          selectedRepositoryIds={selectedRepositoryIds}
-          setSelectedRepositoryIds={onRepoIdsChange}
+          selectedRepositoryIdsOrQueries={selectedRepositories}
+          setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
         />
       </Field>
       <Field label="Branch Filter" description="Query to filter for only the specified branch.">

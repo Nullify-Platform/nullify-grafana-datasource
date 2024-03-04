@@ -3,6 +3,7 @@ import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data'
 import { FetchResponse, isFetchError } from '@grafana/runtime';
 import { SastEventsQueryOptions } from 'types';
 import { SastFinding } from './sastCommon';
+import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const MAX_API_REQUESTS = 10;
 
@@ -273,15 +274,19 @@ export const processSastEvents = async (
   let prevEventId = null;
   for (let i = 0; i < MAX_API_REQUESTS; ++i) {
     const params: SastEventsApiRequest = {
-      ...(queryOptions.queryParameters.githubRepositoryIds
-        ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryIds }
+      ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+        ? {
+            githubRepositoryId: unwrapRepositoryTemplateVariables(
+              queryOptions.queryParameters.githubRepositoryIdsOrQueries
+            ),
+          }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
       ...(queryOptions.queryParameters.eventTypes && queryOptions.queryParameters.eventTypes.length > 0
         ? { eventType: queryOptions.queryParameters.eventTypes }
         : {}),
       ...(prevEventId ? { fromEvent: prevEventId } : { fromTime: range.from.toISOString() }),
-      sort: 'asc',
+      sort: 'desc',
     };
     const endpointPath = 'sast/events';
     console.log(`[${endpointPath}] starting request with params:`, params);
@@ -303,8 +308,6 @@ export const processSastEvents = async (
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    // console.log('parseResult', parseResult);
-    // console.log('events', events);
 
     if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
       // No more events

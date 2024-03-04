@@ -9,14 +9,14 @@ type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDat
 
 export function ScaSummarySubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [selectedRepositoryIds, setSelectedRepositoryIds] = useState<number[]>([]);
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
 
-  const onRepoIdsChange = (respositoryIds: number[]) => {
-    setSelectedRepositoryIds(respositoryIds);
+  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+    setSelectedRepositories(repositories);
     onChange({
       ...query,
       endpoint: 'sca/summary',
-      queryParameters: { ...query.queryParameters, githubRepositoryIds: respositoryIds },
+      queryParameters: { ...query.queryParameters, githubRepositoryIdsOrQueries: repositories },
     });
     onRunQuery();
   };
@@ -37,8 +37,8 @@ export function ScaSummarySubquery(props: Props) {
       >
         <RepositoryField
           getRepositories={props.datasource.getRepositories.bind(props.datasource)}
-          selectedRepositoryIds={selectedRepositoryIds}
-          setSelectedRepositoryIds={onRepoIdsChange}
+          selectedRepositoryIdsOrQueries={selectedRepositories}
+          setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
         />
       </Field>
       <Field label="Package Filter" description="Query to filter for only the specified package.">
