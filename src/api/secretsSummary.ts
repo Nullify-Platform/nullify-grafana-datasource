@@ -1,54 +1,95 @@
 import { z } from 'zod';
 import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
-import { FetchResponse } from '@grafana/runtime';
+import { FetchResponse, getTemplateSrv } from '@grafana/runtime';
 import { SecretsSummaryQueryOptions } from 'types';
 import { SecretsScannerFindingEvent } from './secretsCommon';
+import { unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const SecretsSummaryApiResponseSchema = z.object({
   secrets: z.array(SecretsScannerFindingEvent).nullable(),
   numItems: z.number(),
 });
 
+interface SecretsSummaryApiRequest {
+  githubRepositoryId?: number[];
+  branch?: string;
+  secretType?: string;
+  isAllowlisted?: boolean;
+}
+
 export const processSecretsSummary = async (
   queryOptions: SecretsSummaryQueryOptions,
   request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
-  const response = await request_fn('secrets/summary', {
-    ...(queryOptions.queryParameters.githubRepositoryId
-      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
+  const params: SecretsSummaryApiRequest = {
+    ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+      ? {
+          githubRepositoryId: unwrapRepositoryTemplateVariables(
+            queryOptions.queryParameters.githubRepositoryIdsOrQueries
+          ),
+        }
       : {}),
     ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
-    ...(queryOptions.queryParameters.type ? { type: queryOptions.queryParameters.type } : {}),
-    ...(queryOptions.queryParameters.allowlisted ? { allowlisted: queryOptions.queryParameters.allowlisted } : {}),
-  });
+    ...(queryOptions.queryParameters.secretType ? { secretType: queryOptions.queryParameters.secretType } : {}),
+    ...(queryOptions.queryParameters.isAllowlisted
+      ? { isAllowlisted: queryOptions.queryParameters.isAllowlisted }
+      : {}),
+  };
+  const endpointPath = 'secrets/summary';
+  console.log(`[${endpointPath}] starting request with params:`, params);
+  const response = await request_fn(endpointPath, params);
 
   const parseResult = SecretsSummaryApiResponseSchema.safeParse(response.data);
   if (!parseResult.success) {
-    console.error('Error in data from secrets summary API', parseResult.error);
-    console.log('secrets summary response:', response);
-    throw new Error(`Data from the API is misformed. See console log for more details.`);
+    throw {
+      message: `Data from the API is misformed. Contact Nullify with the data below for help`,
+      data: {
+        endpoint: endpointPath,
+        request_params: params,
+        response: response,
+        data_validation_error: parseResult.error,
+      },
+    };
   }
-
-  // console.log('parseResult', parseResult);
 
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.id) },
+      {
+        name: 'id',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.id),
+      },
       {
         name: 'secretType',
         type: FieldType.string,
         values: parseResult.data.secrets?.map((secret) => secret.secretType),
       },
-      { name: 'filePath', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.filePath) },
-      { name: 'author', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.author) },
+      {
+        name: 'filePath',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.filePath),
+      },
+      {
+        name: 'author',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.author),
+      },
       {
         name: 'timeStamp',
         type: FieldType.time,
         values: parseResult.data.secrets?.map((secret) => new Date(secret.timeStamp)),
       },
-      { name: 'ruleId', type: FieldType.string, values: parseResult.data.secrets?.map((secret) => secret.ruleId) },
-      { name: 'entropy', type: FieldType.number, values: parseResult.data.secrets?.map((secret) => secret.entropy) },
+      {
+        name: 'ruleId',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.ruleId),
+      },
+      {
+        name: 'entropy',
+        type: FieldType.number,
+        values: parseResult.data.secrets?.map((secret) => secret.entropy),
+      },
       {
         name: 'isBranchHead',
         type: FieldType.boolean,

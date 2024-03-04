@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_NUL.DEV.NULLIFY.AI",
-      "label": "nul.dev.nullify.ai",
+      "name": "DS_NULLIFY",
+      "label": "Nullify",
       "description": "",
       "type": "datasource",
       "pluginId": "nullify-grafana-datasource",
@@ -27,7 +27,7 @@
       "type": "datasource",
       "id": "nullify-grafana-datasource",
       "name": "Nullify",
-      "version": "1.0.0"
+      "version": "0.0.0"
     },
     {
       "type": "panel",
@@ -62,7 +62,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -232,10 +232,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "sast/summary",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -316,7 +320,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -395,10 +399,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "secrets/events",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -448,7 +456,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -526,10 +534,14 @@
           "constant": 6.5,
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "sast/summary",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -572,7 +584,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -651,10 +663,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "secrets/events",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -704,7 +720,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -781,10 +797,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "sast/summary",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -839,7 +859,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -915,10 +935,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "secrets/summary",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -947,7 +971,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1025,10 +1049,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "sast/events",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -1038,7 +1066,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+        "uid": "${DS_NULLIFY}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1173,10 +1201,14 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NUL.DEV.NULLIFY.AI}"
+            "uid": "${DS_NULLIFY}"
           },
           "endpoint": "sca/summary",
-          "queryParameters": {},
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
           "refId": "A"
         }
       ],
@@ -1245,7 +1277,31 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "nullify-grafana-datasource",
+          "uid": "${DS_NULLIFY}"
+        },
+        "definition": "Nullify Repository Query",
+        "description": "Filter for the repositories for which to query data",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Repository",
+        "multi": true,
+        "name": "repository",
+        "options": [],
+        "query": {
+          "queryType": "Repository"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-7d",
@@ -1255,6 +1311,6 @@
   "timezone": "",
   "title": "Nullify Demo Dashboard",
   "uid": "ecf0f5c8-bf81-479a-b72f-94b5c2855d04",
-  "version": 6,
+  "version": 2,
   "weekStart": ""
 }

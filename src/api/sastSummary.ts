@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
 import { SastSummaryQueryOptions } from 'types';
-import { prepend_severity_idx } from 'utils/utils';
+import { prepend_severity_idx, unwrapRepositoryTemplateVariables } from 'utils/utils';
 import { SastFinding } from './sastCommon';
 
 const SastSummaryApiResponseSchema = z.object({
@@ -10,29 +10,50 @@ const SastSummaryApiResponseSchema = z.object({
   numItems: z.number(),
 });
 
+interface SastSummaryApiRequest {
+  githubRepositoryId?: number[];
+  severity?: string;
+}
+
 export const processSastSummary = async (
   queryOptions: SastSummaryQueryOptions,
   request_fn: (endpoint_path: string, params?: Record<string, any>) => Promise<FetchResponse<any>>
 ): Promise<DataFrame> => {
-  const response = await request_fn('sast/summary', {
-    ...(queryOptions.queryParameters.githubRepositoryId
-      ? { githubRepositoryId: queryOptions.queryParameters.githubRepositoryId }
+  const params: SastSummaryApiRequest = {
+    ...(queryOptions.queryParameters.githubRepositoryIdsOrQueries
+      ? {
+          githubRepositoryId: unwrapRepositoryTemplateVariables(
+            queryOptions.queryParameters.githubRepositoryIdsOrQueries
+          ),
+        }
       : {}),
     ...(queryOptions.queryParameters.severity ? { severity: queryOptions.queryParameters.severity } : {}),
-  });
-  console.log('sast summary response:', response);
+  };
+  const endpointPath = 'sast/summary';
+  console.log(`[${endpointPath}] starting request with params:`, params);
+  const response = await request_fn(endpointPath, params);
 
   const parseResult = SastSummaryApiResponseSchema.safeParse(response.data);
   if (!parseResult.success) {
-    console.error('Error in data from sast summary API', parseResult.error);
-    console.log('SAST summary response:', response);
-    throw new Error(`Data from the API is misformed. See console log for more details.`);
+    throw {
+      message: `Data from the API is misformed. Contact Nullify with the data below for help`,
+      data: {
+        endpoint: endpointPath,
+        request_params: params,
+        response: response,
+        data_validation_error: parseResult.error,
+      },
+    };
   }
 
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
-      { name: 'id', type: FieldType.string, values: parseResult.data.vulnerabilities.map((vuln) => vuln.id) },
+      {
+        name: 'id',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.id),
+      },
       {
         name: 'formatted_severity',
         type: FieldType.string,
@@ -43,7 +64,11 @@ export const processSastSummary = async (
         type: FieldType.string,
         values: parseResult.data.vulnerabilities.map((vuln) => vuln.severity),
       },
-      { name: 'cwe', type: FieldType.number, values: parseResult.data.vulnerabilities.map((vuln) => vuln.cwe) },
+      {
+        name: 'cwe',
+        type: FieldType.number,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.cwe),
+      },
       {
         name: 'language',
         type: FieldType.string,
@@ -58,6 +83,11 @@ export const processSastSummary = async (
         name: 'isAllowlisted',
         type: FieldType.boolean,
         values: parseResult.data.vulnerabilities.map((vuln) => vuln.isAllowlisted),
+      },
+      {
+        name: 'repositoryName',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.repository),
       },
     ],
   });

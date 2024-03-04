@@ -7,11 +7,12 @@ import {
   dateTime,
 } from '@grafana/data';
 
+import { z } from 'zod';
 import _ from 'lodash';
-import { getBackendSrv, isFetchError } from '@grafana/runtime';
+import { getBackendSrv, getTemplateSrv, isFetchError } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
-import { NullifyDataSourceOptions, NullifyQueryOptions } from './types';
+import { NullifyVariableQuery, NullifyDataSourceOptions, NullifyQueryOptions } from './types';
 import { processSastSummary } from 'api/sastSummary';
 import { processSastEvents } from 'api/sastEvents';
 import { processScaSummary } from 'api/scaSummary';
@@ -29,6 +30,31 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
     this.instanceUrl = instanceSettings.url;
     this.githubOwnerId = instanceSettings.jsonData.githubOwnerId!;
     // this.apiHostUrl = instanceSettings.jsonData.apiHostUrl;
+  }
+
+  async metricFindQuery(query: NullifyVariableQuery, options?: any) {
+    const repos = await this.getRepositories();
+    return repos?.map(repo => ({text: repo.name, value: repo.id})) || [];
+  }
+
+  async getRepositories() {
+    const response = await this._request('admin/repositories');
+    const AdminRepositoriesSchema = z.object({
+      repositories: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+        })
+      ),
+    });
+
+    let result = AdminRepositoriesSchema.safeParse(response.data);
+    if (!result.success) {
+      console.error('Error in data from admin repositories API', result.error);
+      console.log('admin repositories response:', response);
+      return null;
+    }
+    return result.data.repositories;
   }
 
   async query(options: DataQueryRequest<NullifyQueryOptions>): Promise<DataQueryResponse> {
@@ -59,9 +85,11 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
         githubOwnerId: this.githubOwnerId,
         ...params,
       },
+      retry: 3,
     });
+    const output = await lastValueFrom(response);
 
-    return await lastValueFrom(response);
+    return output;
   }
 
   /**
@@ -96,14 +124,20 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
       processSecretsSummary(
         { refId: 'test', endpoint: 'secrets/summary', queryParameters: {} },
         this._request.bind(this)
-      ).catch((err) => ({ status: 'error', message: `Error in Secrets Summary: ${JSON.stringify(err.message ?? err)}` })),
+      ).catch((err) => ({
+        status: 'error',
+        message: `Error in Secrets Summary: ${JSON.stringify(err.message ?? err)}`,
+      })),
       processSecretsEvents(
         { refId: 'test', endpoint: 'secrets/events', queryParameters: {} },
         testTimeRange,
         this._request.bind(this)
-      ).catch((err) => ({ status: 'error', message: `Error in Secrets Events: ${JSON.stringify(err.message ?? err)}` })),
+      ).catch((err) => ({
+        status: 'error',
+        message: `Error in Secrets Events: ${JSON.stringify(err.message ?? err)}`,
+      })),
     ];
-  
+
     const results = await Promise.allSettled(promises);
     const err: string[] = [];
 
@@ -118,7 +152,7 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
         err.push(result.value.message);
       }
     });
-    
+
     if (err.length > 0) {
       console.error('Test failed', err.join('\n'));
       return {

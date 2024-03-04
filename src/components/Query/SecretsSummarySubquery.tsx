@@ -1,20 +1,24 @@
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { Field, Input, Switch } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
 import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
+import { RepositoryField } from 'components/Fields/RepositoryField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
 export function SecretsSummarySubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
 
-  const onRepoIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+    setSelectedRepositories(repositories);
     onChange({
       ...query,
       endpoint: 'secrets/summary',
-      queryParameters: { ...query.queryParameters, githubRepositoryId: event.target.value },
+      queryParameters: { ...query.queryParameters, githubRepositoryIdsOrQueries: repositories },
     });
+    onRunQuery();
   };
 
   const onBranchChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -25,11 +29,11 @@ export function SecretsSummarySubquery(props: Props) {
     });
   };
 
-  const onTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onSecretTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
     onChange({
       ...query,
       endpoint: 'secrets/summary',
-      queryParameters: { ...query.queryParameters, type: event.target.value },
+      queryParameters: { ...query.queryParameters, secretType: event.target.value },
     });
   };
 
@@ -37,21 +41,20 @@ export function SecretsSummarySubquery(props: Props) {
     onChange({
       ...query,
       endpoint: 'secrets/summary',
-      queryParameters: { ...query.queryParameters, allowlisted: event.target.checked },
+      queryParameters: { ...query.queryParameters, isAllowlisted: event.target.checked },
     });
   };
 
   return query.endpoint === 'secrets/summary' ? (
     <>
       <Field
-        label="Repository ID Filter"
-        description="Query to filter for only the secrets from the specified GitHub repository ID. Leave blank to query for all repositories."
+        label="Repository Filter"
+        description="Query to filter for only the vulnerabilities from the specified repositories. Select one or more repositories or enter your repository ID(s) below."
       >
-        <Input
-          onChange={onRepoIdChange}
-          placeholder="1234"
-          onBlur={onRunQuery}
-          value={query.queryParameters?.githubRepositoryId || ''}
+        <RepositoryField
+          getRepositories={props.datasource.getRepositories.bind(props.datasource)}
+          selectedRepositoryIdsOrQueries={selectedRepositories}
+          setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
         />
       </Field>
       <Field label="Branch Filter" description="Query to filter for only the specified branch.">
@@ -62,17 +65,17 @@ export function SecretsSummarySubquery(props: Props) {
           value={query.queryParameters?.branch || ''}
         />
       </Field>
-      <Field label="Type Filter" description="Query to filter for only the specified type.">
+      <Field label="Secret Type Filter" description="Query to filter for only the specified type.">
         <Input
-          onChange={onTypeChange}
-          placeholder="new-finding"
+          onChange={onSecretTypeChange}
+          placeholder="generic-api-key"
           onBlur={onRunQuery}
-          value={query.queryParameters?.type || ''}
+          value={query.queryParameters?.secretType || ''}
         />
       </Field>
 
       <Field label="Include allowlisted secrets?" description="Query to filter include/exclude allowlisted secrets. Default: enabled">
-        <Switch value={query.queryParameters.allowlisted ?? true} onChange={onAllowlistedChange} />
+        <Switch value={query.queryParameters.isAllowlisted ?? true} onChange={onAllowlistedChange} />
       </Field>
     </>
   ) : (
