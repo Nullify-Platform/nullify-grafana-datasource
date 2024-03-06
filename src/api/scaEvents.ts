@@ -289,13 +289,6 @@ export const processScaEvents = async (
         values: events.map((event) => event.type),
       },
       {
-        name: 'numFindings',
-        type: FieldType.number,
-        values: events.map((event) =>
-          event.type === ScaEventType.NewBranchSummary ? event.data.numFindings : undefined
-        ),
-      },
-      {
         name: 'numCritical',
         type: FieldType.number,
         values: events.map((event) =>

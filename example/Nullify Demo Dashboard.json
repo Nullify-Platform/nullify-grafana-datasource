@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_NULLIFY",
-      "label": "Nullify",
+      "name": "DS_NULLIFY_DATASOURCE",
+      "label": "Nullify Datasource",
       "description": "",
       "type": "datasource",
       "pluginId": "nullify-grafana-datasource",
@@ -21,7 +21,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "10.1.0"
+      "version": "10.3.0"
     },
     {
       "type": "datasource",
@@ -62,7 +62,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
+        "uid": "${DS_NULLIFY_DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -70,6 +70,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -98,7 +99,316 @@
                 "value": null
               }
             ]
+          },
+          "unitScale": true
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
           }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 10,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": true,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "normal",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 45,
+        "xTickLabelSpacing": 0
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "nullify-grafana-datasource",
+            "uid": "${DS_NULLIFY_DATASOURCE}"
+          },
+          "endpoint": "sast/summary",
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "SAST - CWE by Language",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "CWE-000"
+                  }
+                },
+                "fieldName": "cwe"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "cwe": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "formatted_severity": {
+                "aggregations": []
+              },
+              "id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "language": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "language",
+            "emptyValue": "null",
+            "rowField": "cwe",
+            "valueField": "id (count)"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [],
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Total": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "S1 - CRITICAL": 6,
+              "S2 - HIGH": 5,
+              "S3 - MEDIUM": 4,
+              "S4 - LOW": 3,
+              "Total": 0,
+              "UNKNOWN": 2,
+              "language\\formatted_severity": 1
+            },
+            "renameByName": {
+              "Go": "",
+              "S4 - LOW": "",
+              "UNKNOWN": "",
+              "cwe\\language": "CWE ID",
+              "language\\formatted_severity": "Language"
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "CWE ID"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "nullify-grafana-datasource",
+        "uid": "${DS_NULLIFY_DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "nullify-grafana-datasource",
+            "uid": "${DS_NULLIFY_DATASOURCE}"
+          },
+          "endpoint": "sast/events",
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "SAST - Findings over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "nullify-grafana-datasource",
+        "uid": "${DS_NULLIFY_DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unitScale": true
         },
         "overrides": [
           {
@@ -201,7 +511,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 10
       },
       "id": 2,
       "options": {
@@ -232,7 +542,7 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
+            "uid": "${DS_NULLIFY_DATASOURCE}"
           },
           "endpoint": "sast/summary",
           "queryParameters": {
@@ -320,7 +630,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
+        "uid": "${DS_NULLIFY_DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -328,6 +638,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -371,7 +682,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": []
       },
@@ -379,7 +691,330 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 10
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "nullify-grafana-datasource",
+            "uid": "${DS_NULLIFY_DATASOURCE}"
+          },
+          "endpoint": "sca/events",
+          "queryParameters": {
+            "eventTypes": [
+              "new-branch-summary"
+            ],
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "SCA - Findings over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "nullify-grafana-datasource",
+        "uid": "${DS_NULLIFY_DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byType",
+              "options": "number"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "id": 13,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": true,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "never",
+        "stacking": "normal",
+        "text": {
+          "valueSize": 12
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 45,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "10.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "nullify-grafana-datasource",
+            "uid": "${DS_NULLIFY_DATASOURCE}"
+          },
+          "endpoint": "sca/summary",
+          "queryParameters": {
+            "githubRepositoryIdsOrQueries": [
+              "$repository"
+            ]
+          },
+          "refId": "A"
+        }
+      ],
+      "title": "SCA - By CVE and Package",
+      "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "isNull",
+                  "options": {}
+                },
+                "fieldName": "vulnerabilityCveId"
+              }
+            ],
+            "match": "any",
+            "type": "exclude"
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "cwe": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "formatted_severity": {
+                "aggregations": []
+              },
+              "id": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              },
+              "language": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "package": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "vulnerabilityCveId": {
+                "aggregations": [],
+                "operation": "groupby"
+              }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "package",
+            "emptyValue": "null",
+            "rowField": "vulnerabilityCveId",
+            "valueField": "id (count)"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [],
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Total": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "S1 - CRITICAL": 6,
+              "S2 - HIGH": 5,
+              "S3 - MEDIUM": 4,
+              "S4 - LOW": 3,
+              "Total": 0,
+              "UNKNOWN": 2,
+              "language\\formatted_severity": 1
+            },
+            "renameByName": {
+              "Go": "",
+              "S4 - LOW": "",
+              "Total": "",
+              "UNKNOWN": "",
+              "cwe\\language": "CWE ID",
+              "language\\formatted_severity": "Language",
+              "vulnerabilityCveId\\package": ""
+            }
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "nullify-grafana-datasource",
+        "uid": "${DS_NULLIFY_DATASOURCE}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 20
       },
       "id": 6,
       "options": {
@@ -399,7 +1034,7 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
+            "uid": "${DS_NULLIFY_DATASOURCE}"
           },
           "endpoint": "secrets/events",
           "queryParameters": {
@@ -456,14 +1091,15 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
+        "uid": "${DS_NULLIFY_DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -490,27 +1126,119 @@
               {
                 "color": "green",
                 "value": null
+              }
+            ]
+          },
+          "unitScale": true
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CRITICAL"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "HIGH"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MEDIUM"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "LOW"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "UNKNOWN"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
               },
               {
-                "color": "red",
-                "value": 80
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": true
+                }
               }
             ]
           }
-        },
-        "overrides": []
+        ]
       },
       "gridPos": {
-        "h": 9,
+        "h": 10,
         "w": 12,
         "x": 0,
-        "y": 10
+        "y": 30
       },
-      "id": 1,
+      "id": 15,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
-        "fullHighlight": false,
+        "fullHighlight": true,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
@@ -519,8 +1247,11 @@
           "showLegend": true
         },
         "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
+        "showValue": "never",
+        "stacking": "normal",
+        "text": {
+          "valueSize": 12
+        },
         "tooltip": {
           "mode": "single",
           "sort": "none"
@@ -528,15 +1259,13 @@
         "xTickLabelRotation": 45,
         "xTickLabelSpacing": 0
       },
-      "pluginVersion": "10.0.3",
       "targets": [
         {
-          "constant": 6.5,
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
+            "uid": "${DS_NULLIFY_DATASOURCE}"
           },
-          "endpoint": "sast/summary",
+          "endpoint": "sca/summary",
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
@@ -545,8 +1274,26 @@
           "refId": "A"
         }
       ],
-      "title": "SAST - By Severity",
+      "title": "SCA - Open Vulns by Package with Fix",
       "transformations": [
+        {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": true
+                  }
+                },
+                "fieldName": "vulnerabilityHasFix"
+              }
+            ],
+            "match": "any",
+            "type": "include"
+          }
+        },
         {
           "id": "groupBy",
           "options": {
@@ -561,21 +1308,70 @@
                 ],
                 "operation": "aggregate"
               },
-              "severity": {
-                "aggregations": []
+              "language": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "package": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "vulnerabilitySeverity": {
+                "aggregations": [],
+                "operation": "groupby"
               }
             }
           }
         },
         {
-          "id": "sortBy",
+          "id": "groupingToMatrix",
           "options": {
-            "fields": {},
-            "sort": [
-              {
-                "field": "formatted_severity"
-              }
-            ]
+            "columnField": "vulnerabilitySeverity",
+            "emptyValue": "null",
+            "rowField": "package",
+            "valueField": "id (count)"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [
+                "S3 - MEDIUM",
+                "S2 - HIGH",
+                "S4 - LOW",
+                "UNKNOWN",
+                "S1 - CRITICAL"
+              ],
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Total": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "S1 - CRITICAL": 6,
+              "S2 - HIGH": 5,
+              "S3 - MEDIUM": 4,
+              "S4 - LOW": 3,
+              "Total": 0,
+              "UNKNOWN": 2,
+              "language\\formatted_severity": 1
+            },
+            "renameByName": {
+              "CRITICAL": "",
+              "S4 - LOW": "",
+              "UNKNOWN": "",
+              "language\\formatted_severity": "Language",
+              "package\\vulnerabilitySeverity": ""
+            }
           }
         }
       ],
@@ -584,7 +1380,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
+        "uid": "${DS_NULLIFY_DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -592,6 +1388,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -635,15 +1432,16 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
+        "h": 10,
         "w": 12,
         "x": 12,
-        "y": 10
+        "y": 30
       },
       "id": 8,
       "options": {
@@ -663,7 +1461,7 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
+            "uid": "${DS_NULLIFY_DATASOURCE}"
           },
           "endpoint": "secrets/events",
           "queryParameters": {
@@ -720,7 +1518,7 @@
     {
       "datasource": {
         "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
+        "uid": "${DS_NULLIFY_DATASOURCE}"
       },
       "fieldConfig": {
         "defaults": {
@@ -728,6 +1526,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -760,7 +1559,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unitScale": true
         },
         "overrides": []
       },
@@ -768,146 +1568,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 19
-      },
-      "id": 3,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelMaxLength": 200,
-        "xTickLabelRotation": 45,
-        "xTickLabelSpacing": 0
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
-          },
-          "endpoint": "sast/summary",
-          "queryParameters": {
-            "githubRepositoryIdsOrQueries": [
-              "$repository"
-            ]
-          },
-          "refId": "A"
-        }
-      ],
-      "title": "SAST - By CWE",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "cwe": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "filePath": {
-                "aggregations": []
-              },
-              "id": {
-                "aggregations": [
-                  "count"
-                ],
-                "operation": "aggregate"
-              }
-            }
-          }
-        },
-        {
-          "id": "sortBy",
-          "options": {
-            "fields": {},
-            "sort": [
-              {
-                "field": "cwe"
-              }
-            ]
-          }
-        },
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "cwe"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 19
+        "y": 40
       },
       "id": 5,
       "options": {
@@ -935,7 +1596,7 @@
         {
           "datasource": {
             "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
+            "uid": "${DS_NULLIFY_DATASOURCE}"
           },
           "endpoint": "secrets/summary",
           "queryParameters": {
@@ -967,314 +1628,10 @@
         }
       ],
       "type": "barchart"
-    },
-    {
-      "datasource": {
-        "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 0,
-        "y": 29
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
-          },
-          "endpoint": "sast/events",
-          "queryParameters": {
-            "githubRepositoryIdsOrQueries": [
-              "$repository"
-            ]
-          },
-          "refId": "A"
-        }
-      ],
-      "title": "SAST - Findings over time",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "nullify-grafana-datasource",
-        "uid": "${DS_NULLIFY}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "text",
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "numLow (sum)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "numCritical (sum)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "numMedium (sum)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "numHigh (sum)"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 29
-      },
-      "id": 9,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "normal",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 45,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "10.3.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "nullify-grafana-datasource",
-            "uid": "${DS_NULLIFY}"
-          },
-          "endpoint": "sca/summary",
-          "queryParameters": {
-            "githubRepositoryIdsOrQueries": [
-              "$repository"
-            ]
-          },
-          "refId": "A"
-        }
-      ],
-      "title": "SCA - Open vulns by package",
-      "transformations": [
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "numCritical": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "numHigh": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "numLow": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "numMedium": {
-                "aggregations": [
-                  "sum"
-                ],
-                "operation": "aggregate"
-              },
-              "numVulnerabilities": {
-                "aggregations": [],
-                "operation": "aggregate"
-              },
-              "package": {
-                "aggregations": [],
-                "operation": "groupby"
-              }
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "includeByName": {},
-            "indexByName": {
-              "numCritical (sum)": 4,
-              "numHigh (sum)": 3,
-              "numLow (sum)": 1,
-              "numMedium (sum)": 2,
-              "package": 0
-            },
-            "renameByName": {}
-          }
-        }
-      ],
-      "type": "barchart"
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [],
   "templating": {
     "list": [
@@ -1282,7 +1639,7 @@
         "current": {},
         "datasource": {
           "type": "nullify-grafana-datasource",
-          "uid": "${DS_NULLIFY}"
+          "uid": "${DS_NULLIFY_DATASOURCE}"
         },
         "definition": "Nullify Repository Query",
         "description": "Filter for the repositories for which to query data",
@@ -1311,6 +1668,6 @@
   "timezone": "",
   "title": "Nullify Demo Dashboard",
   "uid": "ecf0f5c8-bf81-479a-b72f-94b5c2855d04",
-  "version": 2,
+  "version": 15,
   "weekStart": ""
 }
