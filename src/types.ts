@@ -192,10 +192,10 @@ export enum SecretsEventType {
 }
 
 export const SecretsEventTypeDescriptions: Record<SecretsEventType, string> = {
-  [ScaEventType.NewFinding]: 'New Finding',
-  [ScaEventType.NewFindings]: 'New Findings',
-  [ScaEventType.NewAllowlistedFinding]: 'New Allowlisted Finding',
-  [ScaEventType.NewAllowlistedFindings]: 'New Allowlisted Findings',
+  [SecretsEventType.NewFinding]: 'New Finding',
+  [SecretsEventType.NewFindings]: 'New Findings',
+  [SecretsEventType.NewAllowlistedFinding]: 'New Allowlisted Finding',
+  [SecretsEventType.NewAllowlistedFindings]: 'New Allowlisted Findings',
 };
 
 export type NullifyQueryOptions =

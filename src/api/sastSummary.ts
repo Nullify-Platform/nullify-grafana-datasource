@@ -66,8 +66,8 @@ export const processSastSummary = async (
       },
       {
         name: 'cwe',
-        type: FieldType.number,
-        values: parseResult.data.vulnerabilities.map((vuln) => vuln.cwe),
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => `CWE-${vuln.cwe.toString().padStart(3, '0')}`),
       },
       {
         name: 'language',
