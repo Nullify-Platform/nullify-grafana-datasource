@@ -259,6 +259,7 @@ type SastEventsEvent = z.infer<typeof SastEventsEventSchema>;
 
 interface SastEventsApiRequest {
   githubRepositoryId?: number[];
+  fileOwnerName?: string[];
   branch?: string;
   eventType?: string[];
   fromTime?: string; // ISO string
@@ -281,6 +282,11 @@ export const processSastEvents = async (
             githubRepositoryId: unwrapRepositoryTemplateVariables(
               queryOptions.queryParameters.githubRepositoryIdsOrQueries
             ),
+          }
+        : {}),
+      ...(queryOptions.queryParameters.ownerNamesOrQueries
+        ? {
+            fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
           }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),

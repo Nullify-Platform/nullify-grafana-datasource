@@ -12,6 +12,7 @@ const ScaSummaryApiResponseSchema = z.object({
 
 interface ScaSummaryApiRequest {
   githubRepositoryId?: number[];
+  fileOwnerName?: string[];
   severity?: string;
 }
 
@@ -28,6 +29,9 @@ export interface UnwoundScaEventsDependencyFinding {
   numMedium: number | undefined;
   numLow: number | undefined;
   numUnknown: number | undefined;
+  repository: string | undefined;
+  branch: string | undefined;
+  owners: string[] | undefined;
   vulnerabilityHasFix: boolean | undefined;
   vulnerabilityTitle: string | undefined;
   vulnerabilitySeverity: string | undefined;
@@ -50,6 +54,11 @@ export const processScaSummary = async (
           ),
         }
       : {}),
+    ...(queryOptions.queryParameters.ownerNamesOrQueries
+      ? {
+          fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
+        }
+      : {}),
     ...(queryOptions.queryParameters.package ? { package: queryOptions.queryParameters.package } : {}),
   };
   const endpointPath = 'sca/summary';
@@ -69,7 +78,7 @@ export const processScaSummary = async (
     };
   }
 
-  const unwoundFindings = parseResult.data.vulnerabilities?.flatMap(finding => {
+  const unwoundFindings = parseResult.data.vulnerabilities?.flatMap((finding) => {
     let result: UnwoundScaEventsDependencyFinding[] = [];
     for (const vuln of finding.vulnerabilities ?? []) {
       result.push({
@@ -85,6 +94,9 @@ export const processScaSummary = async (
         numMedium: finding.numMedium,
         numLow: finding.numLow,
         numUnknown: finding.numUnknown,
+        repository: finding.repository,
+        branch: finding.branch,
+        owners: finding.fileOwners?.map((owner) => owner.name),
         vulnerabilityHasFix: vuln.hasFix,
         vulnerabilityTitle: vuln.title,
         vulnerabilitySeverity: vuln.severity,
@@ -95,7 +107,7 @@ export const processScaSummary = async (
         vulnerabilityVersion: vuln.version,
       });
     }
-    return result
+    return result;
   });
 
   return createDataFrame({
@@ -150,6 +162,21 @@ export const processScaSummary = async (
         name: 'numLow',
         type: FieldType.number,
         values: unwoundFindings?.map((vuln) => vuln.numLow),
+      },
+      {
+        name: 'repository',
+        type: FieldType.string,
+        values: unwoundFindings?.map((vuln) => vuln.repository),
+      },
+      {
+        name: 'branch',
+        type: FieldType.string,
+        values: unwoundFindings?.map((vuln) => vuln.branch),
+      },
+      {
+        name: 'owners',
+        type: FieldType.string,
+        values: unwoundFindings?.map((vuln) => vuln.owners?.join(', ')),
       },
       {
         name: 'vulnerabilityHasFix',

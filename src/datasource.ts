@@ -12,14 +12,20 @@ import _ from 'lodash';
 import { getBackendSrv, getTemplateSrv, isFetchError } from '@grafana/runtime';
 import { lastValueFrom } from 'rxjs';
 
-import { NullifyVariableQuery, NullifyDataSourceOptions, NullifyQueryOptions } from './types';
+import {
+  NullifyVariableQuery,
+  NullifyDataSourceOptions,
+  NullifyQueryOptions,
+  OwnerEntity,
+  OwnerEntityType,
+} from './types';
 import { processSastSummary } from 'api/sastSummary';
 import { processSastEvents } from 'api/sastEvents';
 import { processScaSummary } from 'api/scaSummary';
 import { processScaEvents } from 'api/scaEvents';
 import { processSecretsSummary } from 'api/secretsSummary';
 import { processSecretsEvents } from 'api/secretsEvents';
-import { Repository, RepositorySchema } from 'api/common';
+import { Organization, OrganizationSchema, Repository, RepositorySchema } from 'api/common';
 
 export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, NullifyDataSourceOptions> {
   instanceUrl?: string;
@@ -35,15 +41,13 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
 
   async metricFindQuery(query: NullifyVariableQuery, options?: any) {
     const repos = await this.getRepositories();
-    return repos?.map(repo => ({text: repo.name, value: repo.id})) || [];
+    return repos?.map((repo) => ({ text: repo.name, value: repo.id })) || [];
   }
 
   async getRepositories(): Promise<Repository[] | null> {
     const response = await this._request('admin/repositories');
     const AdminRepositoriesSchema = z.object({
-      repositories: z.array(
-        RepositorySchema
-      ),
+      repositories: z.array(RepositorySchema),
     });
 
     let result = AdminRepositoriesSchema.safeParse(response.data);
@@ -53,6 +57,35 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
       return null;
     }
     return result.data.repositories;
+  }
+
+  async getOrganization(): Promise<Organization | null> {
+    const response = await this._request('admin/organization');
+    const AdminOrganizationSchema = z.object({
+      organization: OrganizationSchema,
+    });
+
+    let result = AdminOrganizationSchema.safeParse(response.data);
+    if (!result.success) {
+      console.error('Error in data from admin organization API', result.error);
+      console.log('admin organization response:', response);
+      return null;
+    }
+    return result.data.organization;
+  }
+
+  async getOwnerEntities(): Promise<OwnerEntity[] | null> {
+    const organization = await this.getOrganization();
+    if (organization) {
+      return [
+        ...organization.teams.map((team) => ({
+          name: `${organization.slug}/${team.slug}`,
+          type: OwnerEntityType.Team,
+        })),
+        ...organization.members.map((user) => ({ name: user.slug, type: OwnerEntityType.User })),
+      ];
+    }
+    return null;
   }
 
   async query(options: DataQueryRequest<NullifyQueryOptions>): Promise<DataQueryResponse> {

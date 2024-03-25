@@ -12,6 +12,7 @@ const SastSummaryApiResponseSchema = z.object({
 
 interface SastSummaryApiRequest {
   githubRepositoryId?: number[];
+  fileOwnerName?: string[];
   severity?: string;
 }
 
@@ -25,6 +26,11 @@ export const processSastSummary = async (
           githubRepositoryId: unwrapRepositoryTemplateVariables(
             queryOptions.queryParameters.githubRepositoryIdsOrQueries
           ),
+        }
+      : {}),
+    ...(queryOptions.queryParameters.ownerNamesOrQueries
+      ? {
+          fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
         }
       : {}),
     ...(queryOptions.queryParameters.severity ? { severity: queryOptions.queryParameters.severity } : {}),
@@ -85,9 +91,19 @@ export const processSastSummary = async (
         values: parseResult.data.vulnerabilities.map((vuln) => vuln.isAllowlisted),
       },
       {
-        name: 'repositoryName',
+        name: 'repository',
         type: FieldType.string,
         values: parseResult.data.vulnerabilities.map((vuln) => vuln.repository),
+      },
+      {
+        name: 'branch',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.branch),
+      },
+      {
+        name: 'owners',
+        type: FieldType.string,
+        values: parseResult.data.vulnerabilities.map((vuln) => vuln.fileOwners?.map((owner) => owner.name).join(', ')),
       },
     ],
   });
