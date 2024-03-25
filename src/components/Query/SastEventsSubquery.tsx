@@ -4,6 +4,7 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
 import { NullifyDataSourceOptions, NullifyQueryOptions, SastEventTypeDescriptions } from '../../types';
 import { RepositoryField } from 'components/Fields/RepositoryField';
+import { OwnerField } from 'components/Fields/OwnersField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
@@ -13,14 +14,29 @@ const SastEventTypeOptions: Array<SelectableValue<string>> = Object.entries(Sast
 
 export function SastEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<number | string>>(
+    query.endpoint === 'sast/events' ? query.queryParameters?.githubRepositoryIdsOrQueries || [] : []
+  );
+  const [selectedOwners, setSelectedOwners] = useState<string[]>(
+    query.endpoint === 'sast/events' ? query.queryParameters?.ownerNamesOrQueries || [] : []
+  );
 
-  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+  const onRepositoriesChange = (repositories: Array<number | string>) => {
     setSelectedRepositories(repositories);
     onChange({
       ...query,
       endpoint: 'sast/events',
       queryParameters: { ...query.queryParameters, githubRepositoryIdsOrQueries: repositories },
+    });
+    onRunQuery();
+  };
+
+  const onOwnersChange = (owners: string[]) => {
+    setSelectedOwners(owners);
+    onChange({
+      ...query,
+      endpoint: 'sast/events',
+      queryParameters: { ...query.queryParameters, ownerNamesOrQueries: owners },
     });
     onRunQuery();
   };
@@ -44,6 +60,16 @@ export function SastEventsSubquery(props: Props) {
           getRepositories={props.datasource.getRepositories.bind(props.datasource)}
           selectedRepositoryIdsOrQueries={selectedRepositories}
           setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
+        />
+      </Field>
+      <Field
+        label="Owner Filter"
+        description="Query to filter for only the vulnerabilities that belong to a specified owner. Select one or more owners or enter a username/team name below."
+      >
+        <OwnerField
+          getOwnerEntities={props.datasource.getOwnerEntities.bind(props.datasource)}
+          selectedOwnerNamesOrQueries={selectedOwners}
+          setSelectedOwnerNamesOrQueries={onOwnersChange}
         />
       </Field>
       <Field label="Branch Filter" description="Query to filter for only the vulnerabilities in a selected branch.">

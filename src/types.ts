@@ -44,6 +44,7 @@ export interface SastSummaryQueryOptions extends BaseQueryOptions {
 
 export interface SastSummaryQueryParameters {
   githubRepositoryIdsOrQueries?: Array<number | string>;
+  ownerNamesOrQueries?: string[];
   severity?: string;
 }
 
@@ -56,6 +57,7 @@ export interface SastEventsQueryOptions extends BaseQueryOptions {
 
 export interface SastEventsQueryParameters {
   githubRepositoryIdsOrQueries?: Array<number | string>;
+  ownerNamesOrQueries?: string[];
   branch?: string;
   eventTypes?: string[];
 }
@@ -109,6 +111,7 @@ export interface ScaSummaryQueryOptions extends BaseQueryOptions {
 
 export interface ScaSummaryQueryParameters {
   githubRepositoryIdsOrQueries?: Array<number | string>;
+  ownerNamesOrQueries?: string[];
   package?: string;
 }
 
@@ -121,6 +124,7 @@ export interface ScaEventsQueryOptions extends BaseQueryOptions {
 
 export interface ScaEventsQueryParameters {
   githubRepositoryIdsOrQueries?: Array<number | string>;
+  ownerNamesOrQueries?: string[];
   branch?: string;
   eventTypes?: string[];
 }
@@ -197,6 +201,18 @@ export const SecretsEventTypeDescriptions: Record<SecretsEventType, string> = {
   [SecretsEventType.NewAllowlistedFinding]: 'New Allowlisted Finding',
   [SecretsEventType.NewAllowlistedFindings]: 'New Allowlisted Findings',
 };
+
+// OWNER ENTITY TYPES
+
+export enum OwnerEntityType {
+  Team = 'Team',
+  User = 'User',
+}
+
+export interface OwnerEntity {
+  name: string;
+  type: OwnerEntityType;
+}
 
 export type NullifyQueryOptions =
   | SastSummaryQueryOptions

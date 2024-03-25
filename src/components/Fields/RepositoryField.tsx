@@ -76,12 +76,12 @@ export const RepositoryField = (props: RepositoryFieldProps) => {
         isLoading={allRepositoryOptions === undefined}
         closeMenuOnSelect={false}
         placeholder="Select repositories or enter a repository ID"
-        noOptionsMessage="No repositories found. To query a repository not listed, enter the repository ID."
+        noOptionsMessage="No repositories found. To query a repository not listed, enter the repository ID number."
         allowCustomValue
         value={selectedValues}
         onChange={onSelectedValuesChange}
         isValidNewOption={(inputValue) => {
-          return !isNaN(Number(inputValue));
+          return !isNaN(Number(inputValue)) && Number(inputValue) !== 0;
         }}
         onCreateOption={(optionValue) => {
           const optionNumber = Number(optionValue);

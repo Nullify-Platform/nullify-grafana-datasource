@@ -208,6 +208,7 @@ type ScaEventsEvent = z.infer<typeof ScaEventsEventSchema>;
 
 interface ScaEventsApiRequest {
   githubRepositoryId?: number[];
+  fileOwnerName?: string[];
   branch?: string;
   eventType?: string[];
   fromTime?: string; // ISO string
@@ -230,6 +231,11 @@ export const processScaEvents = async (
             githubRepositoryId: unwrapRepositoryTemplateVariables(
               queryOptions.queryParameters.githubRepositoryIdsOrQueries
             ),
+          }
+        : {}),
+      ...(queryOptions.queryParameters.ownerNamesOrQueries
+        ? {
+            fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
           }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),

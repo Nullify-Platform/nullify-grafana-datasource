@@ -4,19 +4,35 @@ import { QueryEditorProps } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
 import { NullifyDataSourceOptions, NullifyQueryOptions } from '../../types';
 import { RepositoryField } from 'components/Fields/RepositoryField';
+import { OwnerField } from 'components/Fields/OwnersField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
 export function ScaSummarySubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<number | string>>(
+    query.endpoint === 'sca/summary' ? query.queryParameters?.githubRepositoryIdsOrQueries || [] : []
+  );
+  const [selectedOwners, setSelectedOwners] = useState<string[]>(
+    query.endpoint === 'sca/summary' ? query.queryParameters?.ownerNamesOrQueries || [] : []
+  );
 
-  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+  const onRepositoriesChange = (repositories: Array<number | string>) => {
     setSelectedRepositories(repositories);
     onChange({
       ...query,
       endpoint: 'sca/summary',
       queryParameters: { ...query.queryParameters, githubRepositoryIdsOrQueries: repositories },
+    });
+    onRunQuery();
+  };
+
+  const onOwnersChange = (owners: string[]) => {
+    setSelectedOwners(owners);
+    onChange({
+      ...query,
+      endpoint: 'sca/summary',
+      queryParameters: { ...query.queryParameters, ownerNamesOrQueries: owners },
     });
     onRunQuery();
   };
@@ -39,6 +55,16 @@ export function ScaSummarySubquery(props: Props) {
           getRepositories={props.datasource.getRepositories.bind(props.datasource)}
           selectedRepositoryIdsOrQueries={selectedRepositories}
           setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
+        />
+      </Field>
+      <Field
+        label="Owner Filter"
+        description="Query to filter for only the vulnerabilities that belong to a specified owner. Select one or more owners or enter a username/team name below."
+      >
+        <OwnerField
+          getOwnerEntities={props.datasource.getOwnerEntities.bind(props.datasource)}
+          selectedOwnerNamesOrQueries={selectedOwners}
+          setSelectedOwnerNamesOrQueries={onOwnersChange}
         />
       </Field>
       <Field label="Package Filter" description="Query to filter for only the specified package.">
