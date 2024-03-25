@@ -16,12 +16,13 @@ export interface NullifySecureJsonData {
   apiKey?: string;
 }
 
-export enum VariableQueryType {
+export enum NullifyVariableQueryType {
   Repository = 'Repository',
+  Owner = 'Owner',
 }
 
 export interface NullifyVariableQuery {
-  queryType: VariableQueryType;
+  queryType: NullifyVariableQueryType;
 }
 
 export type NullifyEndpointPaths =
@@ -207,6 +208,8 @@ export const SecretsEventTypeDescriptions: Record<SecretsEventType, string> = {
 export enum OwnerEntityType {
   Team = 'Team',
   User = 'User',
+  Empty = 'No Owners',
+  All = 'All Owners',
 }
 
 export interface OwnerEntity {

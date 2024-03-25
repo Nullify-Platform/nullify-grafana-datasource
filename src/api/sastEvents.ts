@@ -3,7 +3,7 @@ import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data'
 import { FetchResponse, isFetchError } from '@grafana/runtime';
 import { SastEventType, SastEventsQueryOptions } from 'types';
 import { SastFinding } from './sastCommon';
-import { unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const MAX_API_REQUESTS = 10;
 
@@ -286,7 +286,7 @@ export const processSastEvents = async (
         : {}),
       ...(queryOptions.queryParameters.ownerNamesOrQueries
         ? {
-            fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
+            fileOwnerName: unwrapOwnerTemplateVariables(queryOptions.queryParameters.ownerNamesOrQueries),
           }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),

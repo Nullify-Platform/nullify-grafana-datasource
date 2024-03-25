@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { NullifyVariableQuery, VariableQueryType } from '../types';
+import { NullifyVariableQuery, NullifyVariableQueryType } from '../types';
+import { SelectableValue } from '@grafana/data';
+import { Field, Select } from '@grafana/ui';
 
 interface VariableQueryProps {
   query: NullifyVariableQuery;
@@ -7,14 +9,33 @@ interface VariableQueryProps {
 }
 
 export const VariableQueryEditor = ({ onChange, query }: VariableQueryProps) => {
-  useEffect(() => {
-    onChange({ queryType: VariableQueryType.Repository }, `Nullify ${VariableQueryType.Repository} Query`);
-  }, [onChange]);
+  const queryTypeToSelectableValue = (
+    queryType: NullifyVariableQueryType
+  ): SelectableValue<NullifyVariableQueryType> => {
+    return { label: queryType, value: queryType };
+  };
+
+  const variableOptions: Array<SelectableValue<NullifyVariableQueryType>> =
+    Object.values(NullifyVariableQueryType).map(queryTypeToSelectableValue);
+
+  const [variableSelection, setVariableSelection] = useState<SelectableValue<NullifyVariableQueryType> | null>(
+    queryTypeToSelectableValue(query.queryType)
+  );
 
   return (
     <>
-      This query variable enables the creation of a dashboard-wide filter for repositories.
-      {/* ADD SELECTOR FOR OTHER QUERY TYPES (e.g. Repo/Branch/Team) */}
+      <Field label="Query Type" description="Select which type of data this variable should query for">
+        <Select
+          options={variableOptions}
+          value={variableSelection}
+          onChange={(selection) => {
+            setVariableSelection(selection);
+            if (selection.value) {
+              onChange({ queryType: selection.value }, `Nullify ${selection.value} Query`);
+            }
+          }}
+        />
+      </Field>
     </>
   );
 };

@@ -162,6 +162,9 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
@@ -359,7 +362,8 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
-            ]
+            ],
+            "ownerNamesOrQueries": []
           },
           "refId": "A"
         }
@@ -548,6 +552,9 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
@@ -719,7 +726,8 @@
             ],
             "githubRepositoryIdsOrQueries": [
               "$repository"
-            ]
+            ],
+            "ownerNamesOrQueries": []
           },
           "refId": "A"
         }
@@ -845,6 +853,9 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
@@ -1269,6 +1280,9 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
@@ -1642,7 +1656,7 @@
           "uid": "${DS_NULLIFY_DATASOURCE}"
         },
         "definition": "Nullify Repository Query",
-        "description": "Filter for the repositories for which to query data",
+        "description": "Filter repositories for which to query data",
         "hide": 0,
         "includeAll": true,
         "label": "Repository",
@@ -1651,6 +1665,29 @@
         "options": [],
         "query": {
           "queryType": "Repository"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "nullify-grafana-datasource",
+          "uid": "${DS_NULLIFY_DATASOURCE}"
+        },
+        "definition": "Nullify Owner Query",
+        "description": "Filter code owners for which to query data",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Owner",
+        "multi": true,
+        "name": "owner",
+        "options": [],
+        "query": {
+          "queryType": "Owner"
         },
         "refresh": 1,
         "regex": "",
@@ -1668,6 +1705,6 @@
   "timezone": "",
   "title": "Nullify Demo Dashboard",
   "uid": "ecf0f5c8-bf81-479a-b72f-94b5c2855d04",
-  "version": 15,
+  "version": 3,
   "weekStart": ""
 }

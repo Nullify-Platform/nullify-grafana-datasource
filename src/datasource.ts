@@ -18,6 +18,7 @@ import {
   NullifyQueryOptions,
   OwnerEntity,
   OwnerEntityType,
+  NullifyVariableQueryType,
 } from './types';
 import { processSastSummary } from 'api/sastSummary';
 import { processSastEvents } from 'api/sastEvents';
@@ -40,8 +41,16 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
   }
 
   async metricFindQuery(query: NullifyVariableQuery, options?: any) {
-    const repos = await this.getRepositories();
-    return repos?.map((repo) => ({ text: repo.name, value: repo.id })) || [];
+    if (query.queryType === NullifyVariableQueryType.Repository) {
+      const repos = await this.getRepositories();
+      return repos?.map((repo) => ({ text: repo.name, value: repo.id })) || [];
+    } else if (query.queryType === NullifyVariableQueryType.Owner) {
+      const ownerEntities = await this.getOwnerEntities();
+      return ownerEntities?.map((owner) => ({ text: `${owner.name} (${owner.type})`, value: owner.name })) || [];
+    } else {
+      console.error(`Cannot handle query type ${query.queryType}`, query);
+      return [];
+    }
   }
 
   async getRepositories(): Promise<Repository[] | null> {
@@ -78,6 +87,8 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
     const organization = await this.getOrganization();
     if (organization) {
       return [
+        { name: '', type: OwnerEntityType.Empty },
+        { name: '*', type: OwnerEntityType.All },
         ...organization.teams.map((team) => ({
           name: `${organization.slug}/${team.slug}`,
           type: OwnerEntityType.Team,

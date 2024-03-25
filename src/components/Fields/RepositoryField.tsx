@@ -3,6 +3,7 @@ import { getTemplateSrv } from '@grafana/runtime';
 import { MultiSelect } from '@grafana/ui';
 import { Repository } from 'api/common';
 import React, { useEffect, useRef, useState } from 'react';
+import { NullifyVariableQuery, NullifyVariableQueryType } from 'types';
 
 export interface RepositoryFieldProps {
   getRepositories: () => Promise<Repository[] | null>;
@@ -38,7 +39,13 @@ export const RepositoryField = (props: RepositoryFieldProps) => {
       return { label: `$${variableName}`, value: `$${variableName}` };
     };
 
-    const variables: TypedVariableModel[] = getTemplateSrv().getVariables();
+    const variables: TypedVariableModel[] = getTemplateSrv()
+      .getVariables()
+      .filter(
+        (variable) =>
+          variable.type === 'query' &&
+          (variable.query as NullifyVariableQuery).queryType === NullifyVariableQueryType.Repository
+      );
 
     getRepositoriesRef
       .current()
