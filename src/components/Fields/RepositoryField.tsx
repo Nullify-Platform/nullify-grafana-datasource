@@ -1,12 +1,8 @@
 import { SelectableValue, TypedVariableModel } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { MultiSelect } from '@grafana/ui';
+import { Repository } from 'api/common';
 import React, { useEffect, useRef, useState } from 'react';
-
-export interface Repository {
-  id: string;
-  name: string;
-}
 
 export interface RepositoryFieldProps {
   getRepositories: () => Promise<Repository[] | null>;
@@ -36,7 +32,7 @@ export const RepositoryField = (props: RepositoryFieldProps) => {
 
   useEffect(() => {
     const formatRepositorySelectableValue = (repo: Repository): SelectableValue<number> => {
-      return { label: `${repo.name} (${repo.id})`, value: Number(repo.id) };
+      return { label: `${repo.name} (${repo.id})`, value: repo.id };
     };
     const formatVariableSelectableValue = (variableName: string): SelectableValue<string> => {
       return { label: `$${variableName}`, value: `$${variableName}` };

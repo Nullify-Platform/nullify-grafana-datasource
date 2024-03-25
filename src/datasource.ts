@@ -19,6 +19,7 @@ import { processScaSummary } from 'api/scaSummary';
 import { processScaEvents } from 'api/scaEvents';
 import { processSecretsSummary } from 'api/secretsSummary';
 import { processSecretsEvents } from 'api/secretsEvents';
+import { Repository, RepositorySchema } from 'api/common';
 
 export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, NullifyDataSourceOptions> {
   instanceUrl?: string;
@@ -37,14 +38,11 @@ export class NullifyDataSource extends DataSourceApi<NullifyQueryOptions, Nullif
     return repos?.map(repo => ({text: repo.name, value: repo.id})) || [];
   }
 
-  async getRepositories() {
+  async getRepositories(): Promise<Repository[] | null> {
     const response = await this._request('admin/repositories');
     const AdminRepositoriesSchema = z.object({
       repositories: z.array(
-        z.object({
-          id: z.string(),
-          name: z.string(),
-        })
+        RepositorySchema
       ),
     });
 
