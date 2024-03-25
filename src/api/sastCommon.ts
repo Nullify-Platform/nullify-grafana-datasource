@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FileOwnerSchema } from './common';
 
 export const SastFinding = z.object({
   tenantId: z.string(),
@@ -17,4 +18,5 @@ export const SastFinding = z.object({
   startLine: z.number(),
   endLine: z.number(),
   isAllowlisted: z.boolean(),
+  fileOwners: z.array(FileOwnerSchema).nullable(),
 });

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FileOwnerSchema } from './common';
 
 const ScaEventsCve = z.object({
   id: z.string().optional(),
@@ -30,6 +31,8 @@ export const ScaEventsDependencyFinding = z.object({
   packageFilePath: z.string().optional(),
   version: z.string().optional(),
   filePath: z.string().optional(),
+  repository: z.string().optional(),
+  branch: z.string().optional(),
   line: z.number().optional(),
   numCritical: z.number().default(0),
   numHigh: z.number().default(0),
@@ -37,4 +40,5 @@ export const ScaEventsDependencyFinding = z.object({
   numLow: z.number().default(0),
   numUnknown: z.number().default(0),
   vulnerabilities: z.array(ScaEventsVulnerability).optional().nullable(),
+  fileOwners: z.array(FileOwnerSchema).nullable(),
 });
