@@ -3,7 +3,7 @@ import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data'
 import { FetchResponse } from '@grafana/runtime';
 import { ScaEventType, ScaEventsQueryOptions } from 'types';
 import { ScaEventsDependencyFinding } from './scaCommon';
-import { unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const MAX_API_REQUESTS = 10;
 
@@ -235,7 +235,7 @@ export const processScaEvents = async (
         : {}),
       ...(queryOptions.queryParameters.ownerNamesOrQueries
         ? {
-            fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
+            fileOwnerName: unwrapOwnerTemplateVariables(queryOptions.queryParameters.ownerNamesOrQueries),
           }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),

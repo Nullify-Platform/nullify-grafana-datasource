@@ -38,3 +38,11 @@ export const unwrapRepositoryTemplateVariables = (githubRepositoryIdsOrQueries: 
 
   return [...new Set(repoIds)];
 };
+
+export const unwrapOwnerTemplateVariables = (ownerNamesOrQueries: string[]) => {
+  const ownerNames = ownerNamesOrQueries
+    ?.map((nameOrQuery) => getTemplateSrv().replace(nameOrQuery, undefined, 'csv').split(','))
+    .flat();
+
+  return [...new Set(ownerNames)];
+};

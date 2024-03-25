@@ -3,7 +3,7 @@ import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
 import { ScaSummaryQueryOptions } from 'types';
 import { ScaEventsDependencyFinding } from './scaCommon';
-import { unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const ScaSummaryApiResponseSchema = z.object({
   vulnerabilities: z.array(ScaEventsDependencyFinding).nullable(),
@@ -56,7 +56,7 @@ export const processScaSummary = async (
       : {}),
     ...(queryOptions.queryParameters.ownerNamesOrQueries
       ? {
-          fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
+          fileOwnerName: unwrapOwnerTemplateVariables(queryOptions.queryParameters.ownerNamesOrQueries),
         }
       : {}),
     ...(queryOptions.queryParameters.package ? { package: queryOptions.queryParameters.package } : {}),

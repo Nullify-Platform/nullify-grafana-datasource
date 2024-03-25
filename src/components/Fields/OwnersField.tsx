@@ -3,7 +3,7 @@ import { getTemplateSrv } from '@grafana/runtime';
 import { MultiSelect } from '@grafana/ui';
 import { Organization } from 'api/common';
 import React, { useEffect, useRef, useState } from 'react';
-import { OwnerEntity, OwnerEntityType } from 'types';
+import { NullifyVariableQuery, NullifyVariableQueryType, OwnerEntity, OwnerEntityType } from 'types';
 
 export interface OwnerFieldProps {
   getOwnerEntities: () => Promise<OwnerEntity[] | null>;
@@ -37,7 +37,13 @@ export const OwnerField = (props: OwnerFieldProps) => {
       return { label: `$${variableName}`, value: `$${variableName}` };
     };
 
-    const variables: TypedVariableModel[] = getTemplateSrv().getVariables();
+    const variables: TypedVariableModel[] = getTemplateSrv()
+      .getVariables()
+      .filter(
+        (variable) =>
+          variable.type === 'query' &&
+          (variable.query as NullifyVariableQuery).queryType === NullifyVariableQueryType.Owner
+      );
 
     getOwnerEntitiesRef
       .current()

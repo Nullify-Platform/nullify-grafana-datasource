@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
 import { FetchResponse } from '@grafana/runtime';
 import { SastSummaryQueryOptions } from 'types';
-import { prepend_severity_idx, unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { prepend_severity_idx, unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
 import { SastFinding } from './sastCommon';
 
 const SastSummaryApiResponseSchema = z.object({
@@ -30,7 +30,7 @@ export const processSastSummary = async (
       : {}),
     ...(queryOptions.queryParameters.ownerNamesOrQueries
       ? {
-          fileOwnerName: queryOptions.queryParameters.ownerNamesOrQueries,
+          fileOwnerName: unwrapOwnerTemplateVariables(queryOptions.queryParameters.ownerNamesOrQueries),
         }
       : {}),
     ...(queryOptions.queryParameters.severity ? { severity: queryOptions.queryParameters.severity } : {}),
