@@ -141,6 +141,7 @@ export interface SecretsSummaryQueryOptions extends BaseQueryOptions {
 
 export interface SecretsSummaryQueryParameters {
   githubRepositoryIdsOrQueries?: Array<number | string>;
+  ownerNamesOrQueries?: string[];
   branch?: string;
   secretType?: string;
   isAllowlisted?: boolean;
@@ -155,6 +156,7 @@ export interface SecretsEventsQueryOptions extends BaseQueryOptions {
 
 export interface SecretsEventsQueryParameters {
   githubRepositoryIdsOrQueries?: Array<number | string>;
+  ownerNamesOrQueries?: string[];
   branch?: string;
   eventTypes?: string[];
 }

@@ -53,16 +53,6 @@ export function ScaEventsSubquery(props: Props) {
   return query.endpoint === 'sca/events' ? (
     <>
       <Field
-        label="Repository Filter"
-        description="Query to filter for only the vulnerabilities from the specified repositories. Select one or more repositories or enter your repository ID(s) below."
-      >
-        <RepositoryField
-          getRepositories={props.datasource.getRepositories.bind(props.datasource)}
-          selectedRepositoryIdsOrQueries={selectedRepositories}
-          setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
-        />
-      </Field>
-      <Field
         label="Owner Filter"
         description="Query to filter for only the vulnerabilities that belong to a specified owner. Select one or more owners or enter a username/team name below."
       >
@@ -70,6 +60,16 @@ export function ScaEventsSubquery(props: Props) {
           getOwnerEntities={props.datasource.getOwnerEntities.bind(props.datasource)}
           selectedOwnerNamesOrQueries={selectedOwners}
           setSelectedOwnerNamesOrQueries={onOwnersChange}
+        />
+      </Field>
+      <Field
+        label="Repository Filter"
+        description="Query to filter for only the vulnerabilities from the specified repositories. Select one or more repositories or enter your repository ID(s) below."
+      >
+        <RepositoryField
+          getRepositories={props.datasource.getRepositories.bind(props.datasource)}
+          selectedRepositoryIdsOrQueries={selectedRepositories}
+          setSelectedRepositoryIdsOrQueries={onRepositoriesChange}
         />
       </Field>
       <Field label="Branch Filter" description="Query to filter for only the vulnerabilities in a selected branch.">

@@ -3,7 +3,7 @@ import { DataFrame, FieldType, createDataFrame } from '@grafana/data';
 import { FetchResponse, getTemplateSrv } from '@grafana/runtime';
 import { SecretsSummaryQueryOptions } from 'types';
 import { SecretsScannerFindingEvent } from './secretsCommon';
-import { unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const SecretsSummaryApiResponseSchema = z.object({
   secrets: z.array(SecretsScannerFindingEvent).nullable(),
@@ -12,6 +12,7 @@ const SecretsSummaryApiResponseSchema = z.object({
 
 interface SecretsSummaryApiRequest {
   githubRepositoryId?: number[];
+  fileOwnerName?: string[];
   branch?: string;
   secretType?: string;
   isAllowlisted?: boolean;
@@ -27,6 +28,11 @@ export const processSecretsSummary = async (
           githubRepositoryId: unwrapRepositoryTemplateVariables(
             queryOptions.queryParameters.githubRepositoryIdsOrQueries
           ),
+        }
+      : {}),
+    ...(queryOptions.queryParameters.ownerNamesOrQueries
+      ? {
+          fileOwnerName: unwrapOwnerTemplateVariables(queryOptions.queryParameters.ownerNamesOrQueries),
         }
       : {}),
     ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
@@ -89,6 +95,16 @@ export const processSecretsSummary = async (
         name: 'entropy',
         type: FieldType.number,
         values: parseResult.data.secrets?.map((secret) => secret.entropy),
+      },
+      {
+        name: 'repository',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.repository),
+      },
+      {
+        name: 'branch',
+        type: FieldType.string,
+        values: parseResult.data.secrets?.map((secret) => secret.branch),
       },
       {
         name: 'isBranchHead',
