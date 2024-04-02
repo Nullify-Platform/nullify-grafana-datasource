@@ -1,7 +1,6 @@
 import { SelectableValue, TypedVariableModel } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { MultiSelect } from '@grafana/ui';
-import { Organization } from 'api/common';
 import React, { useEffect, useRef, useState } from 'react';
 import { NullifyVariableQuery, NullifyVariableQueryType, OwnerEntity, OwnerEntityType } from 'types';
 

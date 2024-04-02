@@ -216,10 +216,14 @@ export const processSastEvents = async (
       events.push(...parseResult.data.events);
     }
 
-    if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
+    if (!parseResult.data.nextEventId) {
       // No more events
       break;
-    } else if (parseResult.data.events[0].timestampUnix > range.to.unix()) {
+    } else if (
+      parseResult.data.events &&
+      parseResult.data.events.length > 0 &&
+      parseResult.data.events[0].timestampUnix < range.from.unix()
+    ) {
       // No more events required
       break;
     } else {
