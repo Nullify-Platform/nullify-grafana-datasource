@@ -245,14 +245,14 @@ export const processScaEvents = async (
         ),
       },
       {
-        name: 'repositoryId',
-        type: FieldType.string,
-        values: events.map((event) => event.data.provider.github?.repositoryId),
-      },
-      {
-        name: 'repositoryName',
+        name: 'repository',
         type: FieldType.string,
         values: events.map((event) => event.data.provider.github?.repositoryName),
+      },
+      {
+        name: 'branch',
+        type: FieldType.string,
+        values: events.map((event) => event.data.branch),
       },
       {
         name: 'owners',
