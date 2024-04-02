@@ -42,19 +42,6 @@ const secretsEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [SecretsEventType.NewFindings]: _BaseEventSchema.extend({
-    type: z.literal(SecretsEventType.NewFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SecretsEventsGitProvider,
-      findings: z.array(SecretsScannerFindingEvent).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [SecretsEventType.NewAllowlistedFinding]: _BaseEventSchema.extend({
     type: z.literal(SecretsEventType.NewAllowlistedFinding),
     data: z.object({
@@ -64,19 +51,6 @@ const secretsEventSchemaMap = {
       cloneUrl: z.string(),
       provider: SecretsEventsGitProvider,
       finding: SecretsScannerFindingEvent,
-      userId: z.string(),
-    }),
-  }),
-  [SecretsEventType.NewAllowlistedFindings]: _BaseEventSchema.extend({
-    type: z.literal(SecretsEventType.NewAllowlistedFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SecretsEventsGitProvider,
-      findings: z.array(SecretsScannerFindingEvent).nullable(),
       userId: z.string(),
     }),
   }),
@@ -158,11 +132,6 @@ export const processSecretsEvents = async (
     }
   }
 
-  const getFindings = (event: SecretsEventsEvent) =>
-    event.type === SecretsEventType.NewFinding || event.type === SecretsEventType.NewAllowlistedFinding
-      ? [event.data.finding]
-      : event.data.findings ?? [];
-
   return createDataFrame({
     refId: queryOptions.refId,
     fields: [
@@ -199,59 +168,57 @@ export const processSecretsEvents = async (
       {
         name: 'finding_id',
         type: FieldType.string,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.id) ?? []),
+        values: events.map((event) => event.data.finding.id ?? ''),
       },
       {
         name: 'finding_secretType',
         type: FieldType.string,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.secretType) ?? []),
+        values: events.map((event) => event.data.finding.secretType ?? ''),
       },
       {
         name: 'finding_filePath',
         type: FieldType.string,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.filePath) ?? []),
+        values: events.map((event) => event.data.finding.filePath ?? ''),
       },
       {
         name: 'finding_author',
         type: FieldType.string,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.author) ?? []),
+        values: events.map((event) => event.data.finding.author ?? ''),
       },
       {
         name: 'finding_commit',
         type: FieldType.string,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.commit) ?? []),
+        values: events.map((event) => event.data.finding.commit ?? ''),
       },
       {
         name: 'finding_timeStamp',
         type: FieldType.time,
-        values: events.flatMap((event) => getFindings(event).map((finding) => new Date(finding.timeStamp)) ?? []),
+        values: events.map((event) => new Date(event.data.finding.timeStamp) ?? undefined),
       },
       {
         name: 'finding_ruleId',
         type: FieldType.string,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.ruleId) ?? []),
+        values: events.map((event) => event.data.finding.ruleId ?? ''),
       },
       {
         name: 'finding_entropy',
         type: FieldType.number,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.entropy) ?? []),
+        values: events.map((event) => event.data.finding.entropy ?? ''),
       },
       {
         name: 'finding_isBranchHead',
         type: FieldType.boolean,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.isBranchHead) ?? []),
+        values: events.map((event) => event.data.finding.isBranchHead ?? ''),
       },
       {
         name: 'finding_firstCommitTimestamp',
         type: FieldType.time,
-        values: events.flatMap(
-          (event) => getFindings(event).map((finding) => new Date(finding.firstCommitTimestamp)) ?? []
-        ),
+        values: events.map((event) => new Date(event.data.finding.firstCommitTimestamp) ?? undefined),
       },
       {
         name: 'finding_isAllowlisted',
         type: FieldType.boolean,
-        values: events.flatMap((event) => getFindings(event).map((finding) => finding.isAllowlisted) ?? []),
+        values: events.map((event) => event.data.finding.isAllowlisted ?? ''),
       },
     ],
   });
