@@ -4,6 +4,7 @@ import { FetchResponse } from '@grafana/runtime';
 import { ScaEventType, ScaEventsQueryOptions } from 'types';
 import { ScaEventsDependencyFinding } from './scaCommon';
 import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { FileOwnerSchema } from './common';
 
 const MAX_API_REQUESTS = 10;
 
@@ -44,6 +45,7 @@ const scaEventSchemaMap = {
       numMedium: z.number(),
       numLow: z.number(),
       numUnknown: z.number(),
+      fileOwners: z.array(FileOwnerSchema).nullable(),
     }),
   }),
   [ScaEventType.NewFinding]: _BaseEventSchema.extend({
@@ -55,19 +57,6 @@ const scaEventSchemaMap = {
       cloneUrl: z.string(),
       provider: ScaEventsGitProvider,
       finding: ScaEventsDependencyFinding,
-      userId: z.string(),
-    }),
-  }),
-  [ScaEventType.NewFindings]: _BaseEventSchema.extend({
-    type: z.literal(ScaEventType.NewFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: ScaEventsGitProvider,
-      findings: z.array(ScaEventsDependencyFinding).nullable(),
       userId: z.string(),
     }),
   }),
@@ -83,19 +72,6 @@ const scaEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [ScaEventType.NewAllowlistedFindings]: _BaseEventSchema.extend({
-    type: z.literal(ScaEventType.NewAllowlistedFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: ScaEventsGitProvider,
-      findings: z.array(ScaEventsDependencyFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [ScaEventType.NewFix]: _BaseEventSchema.extend({
     type: z.literal(ScaEventType.NewFix),
     data: z.object({
@@ -105,19 +81,6 @@ const scaEventSchemaMap = {
       cloneUrl: z.string(),
       provider: ScaEventsGitProvider,
       finding: ScaEventsDependencyFinding,
-      userId: z.string(),
-    }),
-  }),
-  [ScaEventType.NewFixes]: _BaseEventSchema.extend({
-    type: z.literal(ScaEventType.NewFixes),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: ScaEventsGitProvider,
-      findings: z.array(ScaEventsDependencyFinding).nullable(),
       userId: z.string(),
     }),
   }),
@@ -134,19 +97,6 @@ const scaEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [ScaEventType.NewPullRequestFindings]: _BaseEventSchema.extend({
-    type: z.literal(ScaEventType.NewPullRequestFindings),
-    data: z.object({
-      id: z.string(),
-      provider: ScaEventsGitProvider,
-      pullRequestId: z.string(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      findings: z.array(ScaEventsDependencyFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [ScaEventType.NewPullRequestFix]: _BaseEventSchema.extend({
     type: z.literal(ScaEventType.NewPullRequestFix),
     data: z.object({
@@ -157,41 +107,6 @@ const scaEventSchemaMap = {
       provider: ScaEventsGitProvider,
       finding: ScaEventsDependencyFinding,
       userId: z.string(),
-    }),
-  }),
-  [ScaEventType.NewPullRequestFixes]: _BaseEventSchema.extend({
-    type: z.literal(ScaEventType.NewPullRequestFixes),
-    data: z.object({
-      id: z.string(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: ScaEventsGitProvider,
-      findings: z.array(ScaEventsDependencyFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
-  [ScaEventType.BotInteractionPR]: _BaseEventSchema.extend({
-    type: z.literal('bot-interaction'), // bot interaction pr
-    data: z.object({
-      id: z.string(),
-      userId: z.string(),
-      repositoryId: z.string(),
-      pullRequestNumber: z.string(),
-      botRequestType: z.string(),
-      botRequest: z.string(),
-    }),
-  }),
-  [ScaEventType.BotInteractionIssue]: _BaseEventSchema.extend({
-    type: z.literal('bot-interaction'), // bot interaction issue
-    data: z.object({
-      id: z.string(),
-      userId: z.string(),
-      repositoryId: z.string(),
-      issueNumber: z.string(),
-      issueTitle: z.string(),
-      botRequestType: z.string(),
-      botRequest: z.string(),
     }),
   }),
 };
@@ -328,15 +243,20 @@ export const processScaEvents = async (
       {
         name: 'repositoryId',
         type: FieldType.string,
-        values: events.map((event) =>
-          event.type !== 'bot-interaction' ? event.data.provider.github?.repositoryId : undefined
-        ),
+        values: events.map((event) => event.data.provider.github?.repositoryId),
       },
       {
         name: 'repositoryName',
         type: FieldType.string,
+        values: events.map((event) => event.data.provider.github?.repositoryName),
+      },
+      {
+        name: 'owners',
+        type: FieldType.string,
         values: events.map((event) =>
-          event.type !== 'bot-interaction' ? event.data.provider.github?.repositoryName : undefined
+          event.type === 'new-branch-summary'
+            ? event.data.fileOwners?.map((owner) => owner.name).join(', ') || ''
+            : event.data.finding.fileOwners?.map((owner) => owner.name).join(', ') || ''
         ),
       },
     ],

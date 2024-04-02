@@ -4,6 +4,7 @@ import { FetchResponse, isFetchError } from '@grafana/runtime';
 import { SastEventType, SastEventsQueryOptions } from 'types';
 import { SastFinding } from './sastCommon';
 import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { FileOwnerSchema } from './common';
 
 const MAX_API_REQUESTS = 10;
 
@@ -43,6 +44,7 @@ const sastEventSchemaMap = {
       numMedium: z.number(),
       numLow: z.number(),
       numUnknown: z.number(),
+      fileOwners: z.array(FileOwnerSchema).nullable(),
     }),
   }),
   [SastEventType.NewFinding]: _BaseEventSchema.extend({
@@ -54,19 +56,6 @@ const sastEventSchemaMap = {
       cloneUrl: z.string(),
       provider: SastEventsGitProvider,
       finding: SastFinding,
-      userId: z.string(),
-    }),
-  }),
-  [SastEventType.NewFindings]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
       userId: z.string(),
     }),
   }),
@@ -82,19 +71,6 @@ const sastEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [SastEventType.NewFixes]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewFixes),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [SastEventType.NewAllowlistedFinding]: _BaseEventSchema.extend({
     type: z.literal(SastEventType.NewAllowlistedFinding),
     data: z.object({
@@ -107,19 +83,6 @@ const sastEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [SastEventType.NewAllowlistedFindings]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewAllowlistedFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [SastEventType.NewUnallowlistedFinding]: _BaseEventSchema.extend({
     type: z.literal(SastEventType.NewUnallowlistedFinding),
     data: z.object({
@@ -129,19 +92,6 @@ const sastEventSchemaMap = {
       cloneUrl: z.string(),
       provider: SastEventsGitProvider,
       finding: SastFinding,
-      userId: z.string(),
-    }),
-  }),
-  [SastEventType.NewUnallowlistedFindings]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewUnallowlistedFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
       userId: z.string(),
     }),
   }),
@@ -158,19 +108,6 @@ const sastEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [SastEventType.NewPullRequestFindings]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewPullRequestFindings),
-    data: z.object({
-      id: z.string(),
-      provider: SastEventsGitProvider,
-      pullRequestId: z.string(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      findings: z.array(SastFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [SastEventType.NewPullRequestFix]: _BaseEventSchema.extend({
     type: z.literal(SastEventType.NewPullRequestFix),
     data: z.object({
@@ -180,18 +117,6 @@ const sastEventSchemaMap = {
       cloneUrl: z.string(),
       provider: SastEventsGitProvider,
       finding: SastFinding,
-      userId: z.string(),
-    }),
-  }),
-  [SastEventType.NewPullRequestFixes]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewPullRequestFixes),
-    data: z.object({
-      id: z.string(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
       userId: z.string(),
     }),
   }),
@@ -207,19 +132,6 @@ const sastEventSchemaMap = {
       userId: z.string(),
     }),
   }),
-  [SastEventType.NewPullRequestAllowlistedFindings]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewPullRequestAllowlistedFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
-      userId: z.string(),
-    }),
-  }),
   [SastEventType.NewPullRequestUnallowlistedFinding]: _BaseEventSchema.extend({
     type: z.literal(SastEventType.NewPullRequestUnallowlistedFinding),
     data: z.object({
@@ -229,19 +141,6 @@ const sastEventSchemaMap = {
       cloneUrl: z.string(),
       provider: SastEventsGitProvider,
       finding: SastFinding,
-      userId: z.string(),
-    }),
-  }),
-  [SastEventType.NewPullRequestUnallowlistedFindings]: _BaseEventSchema.extend({
-    type: z.literal(SastEventType.NewPullRequestUnallowlistedFindings),
-    data: z.object({
-      id: z.string(),
-      part: z.number().optional(),
-      branch: z.string(),
-      commit: z.string(),
-      cloneUrl: z.string(),
-      provider: SastEventsGitProvider,
-      findings: z.array(SastFinding).nullable(),
       userId: z.string(),
     }),
   }),
@@ -386,6 +285,15 @@ export const processSastEvents = async (
         name: 'repositoryName',
         type: FieldType.string,
         values: events.map((event) => event.data.provider.github?.repositoryName),
+      },
+      {
+        name: 'owners',
+        type: FieldType.string,
+        values: events.map((event) =>
+          event.type === 'new-branch-summary'
+            ? event.data.fileOwners?.map((owner) => owner.name).join(', ') || ''
+            : event.data.finding.fileOwners?.map((owner) => owner.name).join(', ') || ''
+        ),
       },
     ],
   });
