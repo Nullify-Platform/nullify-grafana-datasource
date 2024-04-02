@@ -4,6 +4,7 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { NullifyDataSource } from '../../datasource';
 import { NullifyDataSourceOptions, NullifyQueryOptions, SecretsEventTypeDescriptions } from '../../types';
 import { RepositoryField } from 'components/Fields/RepositoryField';
+import { OwnerField } from 'components/Fields/OwnersField';
 
 type Props = QueryEditorProps<NullifyDataSource, NullifyQueryOptions, NullifyDataSourceOptions>;
 
@@ -13,9 +14,24 @@ const SecretsEventTypeOptions: Array<SelectableValue<string>> = Object.entries(S
 
 export function SecretsEventsSubquery(props: Props) {
   const { query, onChange, onRunQuery } = props;
-  const [selectedRepositories, setSelectedRepositories] = useState<Array<(number | string)>>(query.queryParameters?.githubRepositoryIdsOrQueries || []);
+  const [selectedRepositories, setSelectedRepositories] = useState<Array<number | string>>(
+    query.endpoint === 'secrets/events' ? query.queryParameters?.githubRepositoryIdsOrQueries || [] : []
+  );
+  const [selectedOwners, setSelectedOwners] = useState<string[]>(
+    query.endpoint === 'secrets/events' ? query.queryParameters?.ownerNamesOrQueries || [] : []
+  );
 
-  const onRepositoriesChange = (repositories: Array<(number | string)>) => {
+  const onOwnersChange = (owners: string[]) => {
+    setSelectedOwners(owners);
+    onChange({
+      ...query,
+      endpoint: 'secrets/events',
+      queryParameters: { ...query.queryParameters, ownerNamesOrQueries: owners },
+    });
+    onRunQuery();
+  };
+
+  const onRepositoriesChange = (repositories: Array<number | string>) => {
     setSelectedRepositories(repositories);
     onChange({
       ...query,
@@ -36,6 +52,16 @@ export function SecretsEventsSubquery(props: Props) {
 
   return query.endpoint === 'secrets/events' ? (
     <>
+      <Field
+        label="Owner Filter"
+        description="Query to filter for only the vulnerabilities that belong to a specified owner. Select one or more owners or enter a username/team name below."
+      >
+        <OwnerField
+          getOwnerEntities={props.datasource.getOwnerEntities.bind(props.datasource)}
+          selectedOwnerNamesOrQueries={selectedOwners}
+          setSelectedOwnerNamesOrQueries={onOwnersChange}
+        />
+      </Field>
       <Field
         label="Repository Filter"
         description="Query to filter for only the vulnerabilities from the specified repositories. Select one or more repositories or enter your repository ID(s) below."

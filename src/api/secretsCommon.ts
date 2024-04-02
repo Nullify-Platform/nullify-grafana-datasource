@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { FileOwnerSchema } from './common';
 
 export const SecretsScannerFindingEvent = z.object({
   id: z.string(),
@@ -16,7 +17,9 @@ export const SecretsScannerFindingEvent = z.object({
   secretHash: z.string(),
   hyperlink: z.string(),
   isBranchHead: z.boolean(),
-  branches: z.array(z.string()).nullable(),
+  repository: z.string(),
+  branch: z.string(),
   firstCommitTimestamp: z.string(),
   isAllowlisted: z.boolean(),
+  fileOwners: z.array(FileOwnerSchema).nullable(),
 });

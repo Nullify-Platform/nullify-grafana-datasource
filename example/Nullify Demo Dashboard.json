@@ -360,10 +360,15 @@
           },
           "endpoint": "sast/events",
           "queryParameters": {
+            "eventTypes": [
+              "new-branch-summary"
+            ],
             "githubRepositoryIdsOrQueries": [
               "$repository"
             ],
-            "ownerNamesOrQueries": []
+            "ownerNamesOrQueries": [
+              "$owner"
+            ]
           },
           "refId": "A"
         }
@@ -727,7 +732,9 @@
             "githubRepositoryIdsOrQueries": [
               "$repository"
             ],
-            "ownerNamesOrQueries": []
+            "ownerNamesOrQueries": [
+              "$owner"
+            ]
           },
           "refId": "A"
         }
@@ -1051,12 +1058,15 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
         }
       ],
-      "title": "Secrets Detection - First committed last 7 days",
+      "title": "Secrets Detection - First committed",
       "transformations": [
         {
           "id": "filterByValue",
@@ -1481,12 +1491,15 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
         }
       ],
-      "title": "Secrets Detection - Detections last 7 days",
+      "title": "Secrets Detection - Detections",
       "transformations": [
         {
           "id": "filterByValue",
@@ -1494,12 +1507,10 @@
             "filters": [
               {
                 "config": {
-                  "id": "greater",
-                  "options": {
-                    "value": 0
-                  }
+                  "id": "isNotNull",
+                  "options": {}
                 },
-                "fieldName": "finding_timeStamp"
+                "fieldName": "timestamp"
               }
             ],
             "match": "any",
@@ -1510,18 +1521,15 @@
           "id": "groupBy",
           "options": {
             "fields": {
-              "finding_firstCommitTimestamp": {
-                "aggregations": []
-              },
-              "finding_timeStamp": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
               "id": {
                 "aggregations": [
                   "count"
                 ],
                 "operation": "aggregate"
+              },
+              "timestamp": {
+                "aggregations": [],
+                "operation": "groupby"
               }
             }
           }
@@ -1567,16 +1575,33 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
           "unitScale": true
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": true,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 10,
@@ -1584,11 +1609,11 @@
         "x": 0,
         "y": 40
       },
-      "id": 5,
+      "id": 16,
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
-        "fullHighlight": false,
+        "fullHighlight": true,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
@@ -1597,8 +1622,11 @@
           "showLegend": true
         },
         "orientation": "auto",
-        "showValue": "auto",
-        "stacking": "none",
+        "showValue": "never",
+        "stacking": "normal",
+        "text": {
+          "valueSize": 12
+        },
         "tooltip": {
           "mode": "single",
           "sort": "none"
@@ -1616,27 +1644,88 @@
           "queryParameters": {
             "githubRepositoryIdsOrQueries": [
               "$repository"
+            ],
+            "ownerNamesOrQueries": [
+              "$owner"
             ]
           },
           "refId": "A"
         }
       ],
-      "title": "Secret Detection - By Secret Type",
+      "title": "Secrets - By Type and Repo",
       "transformations": [
         {
           "id": "groupBy",
           "options": {
             "fields": {
+              "formatted_severity": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
               "id": {
                 "aggregations": [
-                  "distinctCount"
+                  "count"
                 ],
                 "operation": "aggregate"
+              },
+              "language": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "repository": {
+                "aggregations": [],
+                "operation": "groupby"
               },
               "secretType": {
                 "aggregations": [],
                 "operation": "groupby"
               }
+            }
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "repository",
+            "emptyValue": "null",
+            "rowField": "secretType",
+            "valueField": "id (count)"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "",
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [],
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Total": false
+            },
+            "includeByName": {},
+            "indexByName": {
+              "S1 - CRITICAL": 6,
+              "S2 - HIGH": 5,
+              "S3 - MEDIUM": 4,
+              "S4 - LOW": 3,
+              "Total": 0,
+              "UNKNOWN": 2,
+              "language\\formatted_severity": 1
+            },
+            "renameByName": {
+              "S4 - LOW": "",
+              "Total": "",
+              "UNKNOWN": "",
+              "language\\formatted_severity": "Language",
+              "secretType\\repository": "Repository Name"
             }
           }
         }
@@ -1705,6 +1794,6 @@
   "timezone": "",
   "title": "Nullify Demo Dashboard",
   "uid": "ecf0f5c8-bf81-479a-b72f-94b5c2855d04",
-  "version": 3,
+  "version": 12,
   "weekStart": ""
 }

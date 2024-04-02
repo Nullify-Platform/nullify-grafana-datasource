@@ -3,7 +3,7 @@ import { DataFrame, FieldType, TimeRange, createDataFrame } from '@grafana/data'
 import { FetchResponse } from '@grafana/runtime';
 import { SecretsEventType, SecretsEventsQueryOptions } from 'types';
 import { SecretsScannerFindingEvent } from './secretsCommon';
-import { unwrapRepositoryTemplateVariables } from 'utils/utils';
+import { unwrapOwnerTemplateVariables, unwrapRepositoryTemplateVariables } from 'utils/utils';
 
 const MAX_API_REQUESTS = 10;
 
@@ -68,6 +68,7 @@ type SecretsEventsEvent = z.infer<typeof SecretsEventsEventSchema>;
 
 interface SecretsEventsApiRequest {
   githubRepositoryId?: number[];
+  fileOwnerName?: string[];
   branch?: string;
   eventType?: string[];
   fromTime?: string; // ISO string
@@ -90,6 +91,11 @@ export const processSecretsEvents = async (
             githubRepositoryId: unwrapRepositoryTemplateVariables(
               queryOptions.queryParameters.githubRepositoryIdsOrQueries
             ),
+          }
+        : {}),
+      ...(queryOptions.queryParameters.ownerNamesOrQueries
+        ? {
+            fileOwnerName: unwrapOwnerTemplateVariables(queryOptions.queryParameters.ownerNamesOrQueries),
           }
         : {}),
       ...(queryOptions.queryParameters.branch ? { branch: queryOptions.queryParameters.branch } : {}),
@@ -121,10 +127,15 @@ export const processSecretsEvents = async (
     if (parseResult.data.events) {
       events.push(...parseResult.data.events);
     }
-    if (!parseResult.data.events || parseResult.data.events.length === 0 || !parseResult.data.nextEventId) {
+
+    if (!parseResult.data.nextEventId) {
       // No more events
       break;
-    } else if (parseResult.data.events[0].timestampUnix > range.to.unix()) {
+    } else if (
+      parseResult.data.events &&
+      parseResult.data.events.length > 0 &&
+      parseResult.data.events[0].timestampUnix < range.from.unix()
+    ) {
       // No more events required
       break;
     } else {
@@ -139,6 +150,11 @@ export const processSecretsEvents = async (
         name: 'id',
         type: FieldType.string,
         values: events.map((event) => event.id),
+      },
+      {
+        name: 'timestamp',
+        type: FieldType.time,
+        values: events.map((event) => new Date(event.time) ?? undefined),
       },
       {
         name: 'type',
@@ -156,14 +172,14 @@ export const processSecretsEvents = async (
         values: events.map((event) => event.data.commit),
       },
       {
-        name: 'repository_name',
+        name: 'repository',
         type: FieldType.string,
-        values: events.map((event) => event.data.provider.github?.repositoryName ?? ''),
+        values: events.map((event) => event.data.finding.repository ?? ''),
       },
       {
-        name: 'repository_id',
-        type: FieldType.number,
-        values: events.map((event) => event.data.provider.github?.repositoryId ?? -1),
+        name: 'branch',
+        type: FieldType.string,
+        values: events.map((event) => event.data.finding.branch ?? ''),
       },
       {
         name: 'finding_id',
@@ -189,11 +205,6 @@ export const processSecretsEvents = async (
         name: 'finding_commit',
         type: FieldType.string,
         values: events.map((event) => event.data.finding.commit ?? ''),
-      },
-      {
-        name: 'finding_timeStamp',
-        type: FieldType.time,
-        values: events.map((event) => new Date(event.data.finding.timeStamp) ?? undefined),
       },
       {
         name: 'finding_ruleId',
