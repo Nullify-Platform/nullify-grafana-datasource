@@ -1762,6 +1762,7 @@
         "type": "query"
       },
       {
+        "allValue": "*",
         "current": {},
         "datasource": {
           "type": "nullify-grafana-datasource",
