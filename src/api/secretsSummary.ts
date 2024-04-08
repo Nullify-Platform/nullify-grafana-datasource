@@ -112,11 +112,6 @@ export const processSecretsSummary = async (
         values: parseResult.data.secrets?.map((secret) => secret.isBranchHead),
       },
       {
-        name: 'firstCommitTimestamp',
-        type: FieldType.time,
-        values: parseResult.data.secrets?.map((secret) => new Date(secret.firstCommitTimestamp)),
-      },
-      {
         name: 'isAllowlisted',
         type: FieldType.boolean,
         values: parseResult.data.secrets?.map((secret) => secret.isAllowlisted),
