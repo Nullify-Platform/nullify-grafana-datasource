@@ -162,11 +162,6 @@ export const processSecretsEvents = async (
         values: events.map((event) => event.type),
       },
       {
-        name: 'branch',
-        type: FieldType.string,
-        values: events.map((event) => event.data.branch),
-      },
-      {
         name: 'commit',
         type: FieldType.string,
         values: events.map((event) => event.data.commit),
@@ -220,11 +215,6 @@ export const processSecretsEvents = async (
         name: 'finding_isBranchHead',
         type: FieldType.boolean,
         values: events.map((event) => event.data.finding.isBranchHead ?? ''),
-      },
-      {
-        name: 'finding_firstCommitTimestamp',
-        type: FieldType.time,
-        values: events.map((event) => new Date(event.data.finding.firstCommitTimestamp) ?? undefined),
       },
       {
         name: 'finding_isAllowlisted',
