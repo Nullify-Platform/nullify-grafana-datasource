@@ -1,0 +1,46 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "timezone": "Australia/Sydney",
+  "schedule": [
+    "before 9am on monday"
+  ],
+  "ignorePaths": [
+    "data"
+  ],
+  "docker": {
+    "pinDigests": true
+  },
+  "labels": [
+    "patch"
+  ],
+  "packageRules": [
+    {
+      "groupName": "Dependencies",
+      "groupSlug": "dependencies",
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "patch",
+        "digest",
+        "pin",
+        "pinDigest",
+        "lockFileMaintenance"
+      ],
+      "matchPackagePatterns": [
+        "*"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchPackagePatterns": [
+        "node"
+      ],
+      "enabled": false
+    }
+  ]
+}
